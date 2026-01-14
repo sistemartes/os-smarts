@@ -75,133 +75,85 @@
         </div>
     </div>
 
-    <script>
-
-    // CONFIGURAÇÃO
-const SUPABASE_URL = 'SUA_URL';
-const SUPABASE_KEY = 'SUA_KEY';
-const supaClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
-
-// FUNÇÃO DE LOGIN
-async function fazerLogin() {
-    const email = document.getElementById('login-email').value;
-    const password = document.getElementById('login-senha').value;
-
-    const { data, error } = await supaClient.auth.signInWithPassword({
-        email: email,
-        password: password,
-    });
-
-    if (error) {
-        alert("Erro no login: " + error.message);
-    } else {
-        verificarSessao();
-    }
-}
-
-// VERIFICAR SE ESTÁ LOGADO
-async function verificarSessao() {
-    const { data: { session } } = await supaClient.auth.getSession();
-    const telaLogin = document.getElementById('tela-login');
-
-    if (session) {
-        telaLogin.classList.add('hidden'); // Esconde login
-        carregarOrdens(); // Carrega os dados agora que está logado
-    } else {
-        telaLogin.classList.remove('hidden'); // Mostra login
-    }
-}
-
-// Chamar ao carregar a página
-verificarSessao();
-
-        // FUNÇÃO PARA LOGOUT
-async function fazerLogout() {
-    const { error } = await supaClient.auth.signOut();
-    if (error) alert("Erro ao sair: " + error.message);
-    verificarSessao(); // Isso vai fazer a tela de login reaparecer
-}
-
-// ATUALIZAÇÃO NA FUNÇÃO DE CARREGAR ORDENS
-// É importante garantir que ela só tente buscar dados se houver sessão
-async function carregarOrdens() {
-    const { data: { session } } = await supaClient.auth.getSession();
-    if (!session) return; // Para aqui se não estiver logado
-
-    try {
-        const { data, error } = await supaClient
-            .from('ordens_de_servico')
-            .select('*')
-            .order('created_at', { ascending: false });
-
-        if (error) throw error;
-        // ... (resto do código da lista que já funciona)
-    } catch (err) {
-        console.error(err);
-    }
-}
-        
-    // 1. Verificação de carregamento
-    console.log("Script carregado com sucesso!");
-
-    // 2. CONFIGURAÇÃO (Troque pelos seus dados reais)
+   <script>
+    // 1. CONFIGURAÇÃO ÚNICA (Centralizada)
     const SUPABASE_URL = 'https://awuuucqzhgmyuolqrifm.supabase.co';
-    const SUPABASE_KEY = 'sb_publishable_M5bgMFw0R1rWLe5nfofFeg_NwLkjbBh';
-    
-    // Inicializa o cliente
+    const SUPABASE_KEY = 'sb_publishable_M5bgMFw0R1rWLe5nfofFeg_NwLkjbBh'; // Use sua Anon Key real aqui
     const supaClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
-    // 3. FUNÇÃO PARA SALVAR
-    async function salvarNoSupabase() {
-        console.log("Tentando salvar...");
-        
-        const btn = document.getElementById('btn-salvar');
-        
-        // Captura dos dados
-        const nomeCliente = document.getElementById('cliente').value;
-        const telContato = document.getElementById('contato').value;
-        const equip = document.getElementById('equipamento').value;
-        const desc = document.getElementById('descricao').value;
-        const preco = document.getElementById('valor').value;
+    console.log("Script carregado e Supabase inicializado!");
 
-        if (!nomeCliente) {
-            alert("O nome do cliente é obrigatório!");
-            return;
+    // 2. FUNÇÕES DE AUTENTICAÇÃO
+    async function fazerLogin() {
+        const email = document.getElementById('login-email').value;
+        const password = document.getElementById('login-senha').value;
+
+        try {
+            const { data, error } = await supaClient.auth.signInWithPassword({
+                email: email,
+                password: password,
+            });
+
+            if (error) throw error;
+            
+            console.log("Login realizado!");
+            verificarSessao();
+        } catch (err) {
+            alert("Erro no login: " + err.message);
         }
+    }
+
+    async function verificarSessao() {
+        const { data: { session } } = await supaClient.auth.getSession();
+        const telaLogin = document.getElementById('tela-login');
+
+        if (session) {
+            telaLogin.classList.add('hidden'); 
+            carregarOrdens(); 
+        } else {
+            telaLogin.classList.remove('hidden');
+        }
+    }
+
+    async function fazerLogout() {
+        await supaClient.auth.signOut();
+        window.location.reload(); // Recarrega para limpar a memória
+    }
+
+    // 3. FUNÇÕES DE DADOS (CRUD)
+    async function salvarNoSupabase() {
+        const btn = document.getElementById('btn-salvar');
+        const nomeCliente = document.getElementById('cliente').value;
+        
+        if (!nomeCliente) return alert("O nome do cliente é obrigatório!");
 
         try {
             btn.innerText = "Processando...";
             btn.disabled = true;
 
-            const { data, error } = await supaClient
-                .from('ordens_de_servico')
-                .insert([
-                    { 
-                        numero_os: 'OS-' + Math.floor(Math.random() * 10000),
-                        cliente: nomeCliente, 
-                        contato: telContato, 
-                        equipamento: equip, 
-                        descricao: desc, 
-                        valor: parseFloat(preco) || 0 
-                    }
-                ]);
+            const dados = {
+                numero_os: 'OS-' + Math.floor(Math.random() * 10000),
+                cliente: nomeCliente,
+                contato: document.getElementById('contato').value,
+                equipamento: document.getElementById('equipamento').value,
+                descricao: document.getElementById('descricao').value,
+                valor: parseFloat(document.getElementById('valor').value) || 0
+            };
 
+            const { error } = await supaClient.from('ordens_de_servico').insert([dados]);
             if (error) throw error;
 
-            alert("Ordem de Serviço salva na nuvem!");
+            alert("OS salva com sucesso!");
             limparCampos();
             carregarOrdens();
-
         } catch (err) {
-            console.error("Erro completo:", err);
-            alert("Erro ao conectar com Supabase: " + err.message);
+            alert("Erro: " + err.message);
         } finally {
             btn.innerText = "Salvar na Nuvem";
             btn.disabled = false;
         }
     }
 
-    // 4. FUNÇÃO PARA CARREGAR A LISTA
     async function carregarOrdens() {
         try {
             const { data, error } = await supaClient
@@ -213,9 +165,9 @@ async function carregarOrdens() {
 
             const lista = document.getElementById('lista-os');
             lista.innerHTML = data.map(os => `
-                <li class="p-2 border rounded hover:bg-blue-50 cursor-pointer flex justify-between items-center" onclick="verOS(${JSON.stringify(os).replace(/"/g, '&quot;')})">
+                <li class="p-2 border rounded hover:bg-blue-50 cursor-pointer flex justify-between items-center" onclick='verOS(${JSON.stringify(os)})'>
                     <span class="font-medium">${os.numero_os} - ${os.cliente}</span>
-                    <button onclick="event.stopPropagation(); excluirOS(${os.id})" class="text-red-500 hover:text-red-700 font-bold ml-2">X</button>
+                    <button onclick="event.stopPropagation(); excluirOS(${os.id})" class="text-red-500 font-bold ml-2 text-lg">×</button>
                 </li>
             `).join('');
         } catch (err) {
@@ -223,57 +175,41 @@ async function carregarOrdens() {
         }
     }
 
-    // 5. FUNÇÕES AUXILIARES
+    // 4. AUXILIARES
     function verOS(os) {
         document.getElementById('view-numero').innerText = os.numero_os;
         document.getElementById('view-cliente').innerText = os.cliente;
         document.getElementById('view-equipamento').innerText = os.equipamento;
         document.getElementById('view-descricao').innerText = os.descricao;
-        document.getElementById('view-valor').innerText = os.valor;
+        document.getElementById('view-valor').innerText = Number(os.valor).toLocaleString('pt-BR', { minimumFractionDigits: 2 });
         document.getElementById('area-os').classList.remove('hidden');
     }
 
     async function excluirOS(id) {
-        if(confirm("Tem certeza que deseja excluir esta OS da nuvem?")) {
-            const { error } = await supaClient.from('ordens_de_servico').delete().eq('id', id);
-            if(!error) carregarOrdens();
+        if(confirm("Deseja excluir esta OS?")) {
+            await supaClient.from('ordens_de_servico').delete().eq('id', id);
+            carregarOrdens();
         }
     }
 
     function limparCampos() {
-        document.getElementById('cliente').value = '';
-        document.getElementById('contato').value = '';
-        document.getElementById('equipamento').value = '';
-        document.getElementById('descricao').value = '';
-        document.getElementById('valor').value = '';
+        ['cliente', 'contato', 'equipamento', 'descricao', 'valor'].forEach(id => document.getElementById(id).value = '');
     }
 
-    // Iniciar a lista ao abrir
-    carregarOrdens();
+    function filtrarOrdens() {
+        const termo = document.getElementById('busca').value.toLowerCase();
+        const itens = document.querySelectorAll('#lista-os li');
+        itens.forEach(item => {
+            item.style.display = item.innerText.toLowerCase().includes(termo) ? "flex" : "none";
+        });
+    }
 
-function filtrarOrdens() {
-    // 1. Pega o termo digitado e transforma em minúsculo
-    const termo = document.getElementById('busca').value.toLowerCase();
-    
-    // 2. Pega todos os itens da lista
-    const itens = document.querySelectorAll('#lista-os li');
-
-    itens.forEach(item => {
-        // 3. Pega o texto de dentro do item (Nome e Número da OS)
-        const texto = item.innerText.toLowerCase();
-        
-        // 4. Se o termo estiver no texto, mostra. Se não, esconde.
-        if (texto.includes(termo)) {
-            item.style.display = "flex";
-        } else {
-            item.style.display = "none";
-        }
-    });
-}
-
+    // Início automático
+    verificarSessao();
 </script>
 </body>
 
 </html>
+
 
 

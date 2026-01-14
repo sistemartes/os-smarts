@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sistema de OS Cloud</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <style>@media print { .no-print { display: none; } }</style>
+</head>
+<body class="bg-gray-100 p-4">
+
+    <div class="container mx-auto max-w-5xl">
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+            
+            <div class="md:col-span-1 no-print">
+                <div class="bg-white p-6 rounded-lg shadow-md">
+                    <h2 class="text-xl font-bold mb-4 text-blue-600">Nova Ordem (Nuvem)</h2>
+                    <div class="space-y-3">
+                        <input type="text" id="cliente" placeholder="Nome do Cliente" class="w-full border p-2 rounded text-sm">
+                        <input type="text" id="contato" placeholder="Telefone" class="w-full border p-2 rounded text-sm">
+                        <input type="text" id="equipamento" placeholder="Equipamento" class="w-full border p-2 rounded text-sm">
+                        <textarea id="descricao" placeholder="Descrição" class="w-full border p-2 rounded text-sm h-20"></textarea>
+                        <input type="number" id="valor" placeholder="Valor R$" class="w-full border p-2 rounded text-sm">
+                        <button onclick="salvarNoSupabase()" id="btn-salvar" class="w-full bg-blue-600 text-white font-bold py-2 rounded hover:bg-blue-700">
+                            Salvar na Nuvem
+                        </button>
+                    </div>
+                </div>
+
+                <div class="bg-white p-6 rounded-lg shadow-md mt-6">
+    <h3 class="font-bold mb-3 border-b pb-2">Histórico na Nuvem</h3>
+    
+    <div class="mb-4">
+        <input type="text" id="busca" onkeyup="filtrarOrdens()" placeholder="Buscar cliente ou OS..." 
+               class="w-full border p-2 rounded text-sm bg-gray-50 focus:bg-white focus:ring-2 focus:ring-blue-500 outline-none">
+    </div>
+
+    <ul id="lista-os" class="space-y-2 text-sm max-h-64 overflow-y-auto">
+        </ul>
+</div>
+            </div>
+
+            <div class="md:col-span-2">
+                <div id="area-os" class="bg-white p-8 rounded shadow-lg hidden">
+                    <div class="flex justify-between border-b-2 border-gray-800 pb-4 mb-6">
+                        <h1 class="text-2xl font-bold uppercase">Ordem de Serviço</h1>
+                        <p class="text-xs">Nº: <span id="view-numero"></span></p>
+                    </div>
+                    <div id="conteudo-view" class="text-sm space-y-4">
+                        <p><strong>Cliente:</strong> <span id="view-cliente"></span></p>
+                        <p><strong>Equipamento:</strong> <span id="view-equipamento"></span></p>
+                        <p><strong>Descrição:</strong> <span id="view-descricao"></span></p>
+                        <p class="text-lg font-bold pt-4">Valor: R$ <span id="view-valor"></span></p>
+                    </div>
+                    <button onclick="window.print()" class="no-print mt-6 bg-green-600 text-white px-4 py-1 rounded">Imprimir</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+    // 1. Verificação de carregamento
+    console.log("Script carregado com sucesso!");
+
+    // 2. CONFIGURAÇÃO (Troque pelos seus dados reais)
+    const SUPABASE_URL = 'https://awuuucqzhgmyuolqrifm.supabase.co';
+    const SUPABASE_KEY = 'sb_publishable_M5bgMFw0R1rWLe5nfofFeg_NwLkjbBh';
+    
+    // Inicializa o cliente
+    const supaClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+    // 3. FUNÇÃO PARA SALVAR
+    async function salvarNoSupabase() {
+        console.log("Tentando salvar...");
+        
+        const btn = document.getElementById('btn-salvar');
+        
+        // Captura dos dados
+        const nomeCliente = document.getElementById('cliente').value;
+        const telContato = document.getElementById('contato').value;
+        const equip = document.getElementById('equipamento').value;
+        const desc = document.getElementById('descricao').value;
+        const preco = document.getElementById('valor').value;
+
+        if (!nomeCliente) {
+            alert("O nome do cliente é obrigatório!");
+            return;
+        }
+
+        try {
+            btn.innerText = "Processando...";
+            btn.disabled = true;
+
+            const { data, error } = await supaClient
+                .from('ordens_de_servico')
+                .insert([
+                    { 
+                        numero_os: 'OS-' + Math.floor(Math.random() * 10000),
+                        cliente: nomeCliente, 
+                        contato: telContato, 
+                        equipamento: equip, 
+                        descricao: desc, 
+                        valor: parseFloat(preco) || 0 
+                    }
+                ]);
+
+            if (error) throw error;
+
+            alert("Ordem de Serviço salva na nuvem!");
+            limparCampos();
+            carregarOrdens();
+
+        } catch (err) {
+            console.error("Erro completo:", err);
+            alert("Erro ao conectar com Supabase: " + err.message);
+        } finally {
+            btn.innerText = "Salvar na Nuvem";
+            btn.disabled = false;
+        }
+    }
+
+    // 4. FUNÇÃO PARA CARREGAR A LISTA
+    async function carregarOrdens() {
+        try {
+            const { data, error } = await supaClient
+                .from('ordens_de_servico')
+                .select('*')
+                .order('created_at', { ascending: false });
+
+            if (error) throw error;
+
+            const lista = document.getElementById('lista-os');
+            lista.innerHTML = data.map(os => `
+                <li class="p-2 border rounded hover:bg-blue-50 cursor-pointer flex justify-between items-center" onclick="verOS(${JSON.stringify(os).replace(/"/g, '&quot;')})">
+                    <span class="font-medium">${os.numero_os} - ${os.cliente}</span>
+                    <button onclick="event.stopPropagation(); excluirOS(${os.id})" class="text-red-500 hover:text-red-700 font-bold ml-2">X</button>
+                </li>
+            `).join('');
+        } catch (err) {
+            console.error("Erro ao carregar lista:", err);
+        }
+    }
+
+    // 5. FUNÇÕES AUXILIARES
+    function verOS(os) {
+        document.getElementById('view-numero').innerText = os.numero_os;
+        document.getElementById('view-cliente').innerText = os.cliente;
+        document.getElementById('view-equipamento').innerText = os.equipamento;
+        document.getElementById('view-descricao').innerText = os.descricao;
+        document.getElementById('view-valor').innerText = os.valor;
+        document.getElementById('area-os').classList.remove('hidden');
+    }
+
+    async function excluirOS(id) {
+        if(confirm("Tem certeza que deseja excluir esta OS da nuvem?")) {
+            const { error } = await supaClient.from('ordens_de_servico').delete().eq('id', id);
+            if(!error) carregarOrdens();
+        }
+    }
+
+    function limparCampos() {
+        document.getElementById('cliente').value = '';
+        document.getElementById('contato').value = '';
+        document.getElementById('equipamento').value = '';
+        document.getElementById('descricao').value = '';
+        document.getElementById('valor').value = '';
+    }
+
+    // Iniciar a lista ao abrir
+    carregarOrdens();
+
+function filtrarOrdens() {
+    // 1. Pega o termo digitado e transforma em minúsculo
+    const termo = document.getElementById('busca').value.toLowerCase();
+    
+    // 2. Pega todos os itens da lista
+    const itens = document.querySelectorAll('#lista-os li');
+
+    itens.forEach(item => {
+        // 3. Pega o texto de dentro do item (Nome e Número da OS)
+        const texto = item.innerText.toLowerCase();
+        
+        // 4. Se o termo estiver no texto, mostra. Se não, esconde.
+        if (texto.includes(termo)) {
+            item.style.display = "flex";
+        } else {
+            item.style.display = "none";
+        }
+    });
+}
+
+</script>
+</body>
+</html>

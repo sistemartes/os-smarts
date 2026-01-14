@@ -18,6 +18,13 @@
         <button onclick="fazerLogin()" class="w-full bg-blue-600 text-white font-bold py-2 rounded">Entrar</button>
     </div>
 </div>
+
+    <div class="flex justify-between items-center mb-6 no-print">
+    <h1 class="text-2xl font-bold text-blue-700">Gestão de OS</h1>
+    <button onclick="fazerLogout()" class="bg-red-500 text-white px-3 py-1 rounded text-sm hover:bg-red-600">
+        Sair do Sistema
+    </button>
+</div>
     
     <div class="container mx-auto max-w-5xl">
         <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
@@ -107,6 +114,32 @@ async function verificarSessao() {
 
 // Chamar ao carregar a página
 verificarSessao();
+
+        // FUNÇÃO PARA LOGOUT
+async function fazerLogout() {
+    const { error } = await supaClient.auth.signOut();
+    if (error) alert("Erro ao sair: " + error.message);
+    verificarSessao(); // Isso vai fazer a tela de login reaparecer
+}
+
+// ATUALIZAÇÃO NA FUNÇÃO DE CARREGAR ORDENS
+// É importante garantir que ela só tente buscar dados se houver sessão
+async function carregarOrdens() {
+    const { data: { session } } = await supaClient.auth.getSession();
+    if (!session) return; // Para aqui se não estiver logado
+
+    try {
+        const { data, error } = await supaClient
+            .from('ordens_de_servico')
+            .select('*')
+            .order('created_at', { ascending: false });
+
+        if (error) throw error;
+        // ... (resto do código da lista que já funciona)
+    } catch (err) {
+        console.error(err);
+    }
+}
         
     // 1. Verificação de carregamento
     console.log("Script carregado com sucesso!");
@@ -242,4 +275,5 @@ function filtrarOrdens() {
 </body>
 
 </html>
+
 

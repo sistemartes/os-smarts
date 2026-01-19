@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Sistema de OS Cloud</title>
+    <title>Sistema de OS Cloud - V2</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>@media print { .no-print { display: none; } }</style>
@@ -11,171 +11,224 @@
 <body class="bg-gray-100 p-4">
 
     <div id="tela-login" class="fixed inset-0 bg-gray-900 flex items-center justify-center z-50">
-    <div class="bg-white p-8 rounded-lg shadow-xl w-96">
-        <h2 class="text-2xl font-bold mb-6 text-center text-blue-600">Acesso Restrito</h2>
-        <input type="email" id="login-email" placeholder="E-mail" class="w-full border p-2 mb-4 rounded">
-        <input type="password" id="login-senha" placeholder="Senha" class="w-full border p-2 mb-6 rounded">
-        <button onclick="fazerLogin()" class="w-full bg-blue-600 text-white font-bold py-2 rounded">Entrar</button>
+        <div class="bg-white p-8 rounded-lg shadow-xl w-96">
+            <h2 class="text-2xl font-bold mb-6 text-center text-blue-600">Acesso Restrito</h2>
+            <input type="email" id="login-email" placeholder="E-mail" class="w-full border p-2 mb-4 rounded outline-none focus:ring-2 focus:ring-blue-500">
+            <input type="password" id="login-senha" placeholder="Senha" class="w-full border p-2 mb-6 rounded outline-none focus:ring-2 focus:ring-blue-500">
+            <button onclick="fazerLogin()" class="w-full bg-blue-600 text-white font-bold py-2 rounded hover:bg-blue-700 transition">Entrar</button>
+        </div>
     </div>
-</div>
 
-    <div class="flex justify-between items-center mb-6 no-print">
-    <h1 class="text-2xl font-bold text-blue-700">Gestão de OS</h1>
-    <button onclick="fazerLogout()" class="bg-red-500 text-white px-3 py-1 rounded text-sm hover:bg-red-600">
-        Sair do Sistema
-    </button>
-</div>
+    <div class="flex justify-between items-center mb-6 no-print max-w-5xl mx-auto">
+        <h1 class="text-2xl font-bold text-blue-700">Gestão de OS <span class="text-xs font-normal text-gray-400">v2.0</span></h1>
+        <button onclick="fazerLogout()" class="bg-red-500 text-white px-3 py-1 rounded text-sm hover:bg-red-600 transition">
+            Sair do Sistema
+        </button>
+    </div>
     
     <div class="container mx-auto max-w-5xl">
         <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
             
             <div class="md:col-span-1 no-print">
-                <div class="bg-white p-6 rounded-lg shadow-md">
-                    <h2 class="text-xl font-bold mb-4 text-blue-600">Nova Ordem (Nuvem)</h2>
+                <div class="bg-white p-6 rounded-lg shadow-md border-t-4 border-blue-600" id="form-container">
+                    <h2 id="titulo-form" class="text-xl font-bold mb-4 text-blue-600">Nova Ordem</h2>
+                    
                     <div class="space-y-3">
-                        <input type="text" id="cliente" placeholder="Nome do Cliente" class="w-full border p-2 rounded text-sm">
-                        <input type="text" id="contato" placeholder="Telefone" class="w-full border p-2 rounded text-sm">
-                        <input type="text" id="equipamento" placeholder="Equipamento" class="w-full border p-2 rounded text-sm">
-                        <textarea id="descricao" placeholder="Descrição" class="w-full border p-2 rounded text-sm h-20"></textarea>
-                        <input type="number" id="valor" placeholder="Valor R$" class="w-full border p-2 rounded text-sm">
-                        <button onclick="salvarNoSupabase()" id="btn-salvar" class="w-full bg-blue-600 text-white font-bold py-2 rounded hover:bg-blue-700">
+                        <input type="hidden" id="edit-id">
+                        
+                        <input type="text" id="cliente" placeholder="Nome do Cliente" class="w-full border p-2 rounded text-sm outline-none focus:border-blue-500">
+                        <input type="text" id="contato" placeholder="Telefone" class="w-full border p-2 rounded text-sm outline-none focus:border-blue-500">
+                        <input type="text" id="equipamento" placeholder="Equipamento" class="w-full border p-2 rounded text-sm outline-none focus:border-blue-500">
+                        <textarea id="descricao" placeholder="Descrição do Problema/Serviço" class="w-full border p-2 rounded text-sm h-24 outline-none focus:border-blue-500"></textarea>
+                        <input type="number" id="valor" placeholder="Valor R$" class="w-full border p-2 rounded text-sm outline-none focus:border-blue-500">
+                        
+                        <button onclick="salvarNoSupabase()" id="btn-salvar" class="w-full bg-blue-600 text-white font-bold py-2 rounded hover:bg-blue-700 transition">
                             Salvar na Nuvem
+                        </button>
+                        
+                        <button id="btn-cancelar" onclick="cancelarEdicao()" class="w-full bg-gray-400 text-white font-bold py-1 rounded hidden transition">
+                            Cancelar Alteração
                         </button>
                     </div>
                 </div>
 
                 <div class="bg-white p-6 rounded-lg shadow-md mt-6">
-    <h3 class="font-bold mb-3 border-b pb-2">Histórico na Nuvem</h3>
-    
-    <div class="mb-4">
-        <input type="text" id="busca" onkeyup="filtrarOrdens()" placeholder="Buscar cliente ou OS..." 
-               class="w-full border p-2 rounded text-sm bg-gray-50 focus:bg-white focus:ring-2 focus:ring-blue-500 outline-none">
-    </div>
-
-    <ul id="lista-os" class="space-y-2 text-sm max-h-64 overflow-y-auto">
-        </ul>
-</div>
+                    <h3 class="font-bold mb-3 border-b pb-2">Histórico na Nuvem</h3>
+                    <div class="mb-4">
+                        <input type="text" id="busca" onkeyup="filtrarOrdens()" placeholder="Buscar cliente ou OS..." 
+                               class="w-full border p-2 rounded text-sm bg-gray-50 focus:bg-white focus:ring-2 focus:ring-blue-500 outline-none">
+                    </div>
+                    <ul id="lista-os" class="space-y-2 text-sm max-h-80 overflow-y-auto">
+                        </ul>
+                </div>
             </div>
 
             <div class="md:col-span-2">
-                <div id="area-os" class="bg-white p-8 rounded shadow-lg hidden">
+                <div id="area-os" class="bg-white p-8 rounded shadow-lg hidden min-h-[500px] relative">
                     <div class="flex justify-between border-b-2 border-gray-800 pb-4 mb-6">
-                        <h1 class="text-2xl font-bold uppercase">Ordem de Serviço</h1>
-                        <p class="text-xs">Nº: <span id="view-numero"></span></p>
+                        <div>
+                            <h1 class="text-2xl font-bold uppercase">Ordem de Serviço</h1>
+                            <p class="text-gray-500 text-xs">Documento gerado via Sistema Cloud</p>
+                        </div>
+                        <div class="text-right">
+                            <p class="font-bold">Nº: <span id="view-numero"></span></p>
+                        </div>
                     </div>
-                    <div id="conteudo-view" class="text-sm space-y-4">
-                        <p><strong>Cliente:</strong> <span id="view-cliente"></span></p>
-                        <p><strong>Equipamento:</strong> <span id="view-equipamento"></span></p>
-                        <p><strong>Descrição:</strong> <span id="view-descricao"></span></p>
-                        <p class="text-lg font-bold pt-4">Valor: R$ <span id="view-valor"></span></p>
+                    <div id="conteudo-view" class="text-base space-y-6">
+                        <p class="border-b pb-2"><strong>Cliente:</strong> <span id="view-cliente" class="ml-2"></span></p>
+                        <p class="border-b pb-2"><strong>Equipamento:</strong> <span id="view-equipamento" class="ml-2"></span></p>
+                        <div>
+                            <p class="font-bold mb-1">Descrição do Serviço:</p>
+                            <div id="view-descricao" class="p-3 bg-gray-50 rounded min-h-[100px] whitespace-pre-wrap"></div>
+                        </div>
+                        <div class="text-right">
+                            <p class="text-2xl font-bold pt-4 text-blue-800">Total: R$ <span id="view-valor"></span></p>
+                        </div>
                     </div>
-                    <button onclick="window.print()" class="no-print mt-6 bg-green-600 text-white px-4 py-1 rounded">Imprimir</button>
+                    
+                    <div class="mt-20 border-t pt-4 text-center text-xs text-gray-400 no-print">
+                        Assinatura do Técnico / Responsável
+                    </div>
+                    
+                    <button onclick="window.print()" class="no-print mt-8 bg-green-600 text-white px-6 py-2 rounded-lg font-bold hover:bg-green-700 shadow-md transition">
+                        🖨️ Imprimir OS
+                    </button>
                 </div>
             </div>
         </div>
     </div>
 
-   <script>
-    // 1. CONFIGURAÇÃO ÚNICA (Centralizada)
+<script>
+    // 1. CONFIGURAÇÃO
     const SUPABASE_URL = 'https://awuuucqzhgmyuolqrifm.supabase.co';
-    const SUPABASE_KEY = 'sb_publishable_M5bgMFw0R1rWLe5nfofFeg_NwLkjbBh'; // Use sua Anon Key real aqui
+    const SUPABASE_KEY = 'sb_publishable_M5bgMFw0R1rWLe5nfofFeg_NwLkjbBh'; 
     const supaClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
-    console.log("Script carregado e Supabase inicializado!");
-
-    // 2. FUNÇÕES DE AUTENTICAÇÃO
+    // 2. AUTENTICAÇÃO
     async function fazerLogin() {
         const email = document.getElementById('login-email').value;
         const password = document.getElementById('login-senha').value;
-
         try {
-            const { data, error } = await supaClient.auth.signInWithPassword({
-                email: email,
-                password: password,
-            });
-
+            const { error } = await supaClient.auth.signInWithPassword({ email, password });
             if (error) throw error;
-            
-            console.log("Login realizado!");
             verificarSessao();
         } catch (err) {
-            alert("Erro no login: " + err.message);
+            alert("Erro: " + err.message);
         }
     }
 
     async function verificarSessao() {
         const { data: { session } } = await supaClient.auth.getSession();
-        const telaLogin = document.getElementById('tela-login');
-
+        const tela = document.getElementById('tela-login');
         if (session) {
-            telaLogin.classList.add('hidden'); 
-            carregarOrdens(); 
+            tela.classList.add('hidden');
+            carregarOrdens();
         } else {
-            telaLogin.classList.remove('hidden');
+            tela.classList.remove('hidden');
         }
     }
 
     async function fazerLogout() {
         await supaClient.auth.signOut();
-        window.location.reload(); // Recarrega para limpar a memória
+        window.location.reload();
     }
 
-    // 3. FUNÇÕES DE DADOS (CRUD)
+    // 3. OPERAÇÕES DE DADOS (CRUD)
     async function salvarNoSupabase() {
+        const idEdicao = document.getElementById('edit-id').value;
         const btn = document.getElementById('btn-salvar');
-        const nomeCliente = document.getElementById('cliente').value;
+        const nome = document.getElementById('cliente').value;
         
-        if (!nomeCliente) return alert("O nome do cliente é obrigatório!");
+        if (!nome) return alert("O nome do cliente é obrigatório!");
+
+        const dados = {
+            cliente: nome,
+            contato: document.getElementById('contato').value,
+            equipamento: document.getElementById('equipamento').value,
+            descricao: document.getElementById('descricao').value,
+            valor: parseFloat(document.getElementById('valor').value) || 0
+        };
 
         try {
             btn.innerText = "Processando...";
             btn.disabled = true;
 
-            const dados = {
-                numero_os: 'OS-' + Math.floor(Math.random() * 10000),
-                cliente: nomeCliente,
-                contato: document.getElementById('contato').value,
-                equipamento: document.getElementById('equipamento').value,
-                descricao: document.getElementById('descricao').value,
-                valor: parseFloat(document.getElementById('valor').value) || 0
-            };
+            if (idEdicao) {
+                // UPDATE (Edição)
+                const { error } = await supaClient.from('ordens_de_servico').update(dados).eq('id', idEdicao);
+                if (error) throw error;
+                alert("OS atualizada com sucesso!");
+            } else {
+                // INSERT (Nova)
+                dados.numero_os = 'OS-' + Math.floor(1000 + Math.random() * 9000);
+                const { error } = await supaClient.from('ordens_de_servico').insert([dados]);
+                if (error) throw error;
+                alert("Nova OS salva na nuvem!");
+            }
 
-            const { error } = await supaClient.from('ordens_de_servico').insert([dados]);
-            if (error) throw error;
-
-            alert("OS salva com sucesso!");
-            limparCampos();
+            cancelarEdicao();
             carregarOrdens();
         } catch (err) {
             alert("Erro: " + err.message);
         } finally {
-            btn.innerText = "Salvar na Nuvem";
             btn.disabled = false;
         }
     }
 
     async function carregarOrdens() {
         try {
-            const { data, error } = await supaClient
-                .from('ordens_de_servico')
-                .select('*')
-                .order('created_at', { ascending: false });
-
+            const { data, error } = await supaClient.from('ordens_de_servico').select('*').order('created_at', { ascending: false });
             if (error) throw error;
 
             const lista = document.getElementById('lista-os');
             lista.innerHTML = data.map(os => `
-                <li class="p-2 border rounded hover:bg-blue-50 cursor-pointer flex justify-between items-center" onclick='verOS(${JSON.stringify(os)})'>
-                    <span class="font-medium">${os.numero_os} - ${os.cliente}</span>
-                    <button onclick="event.stopPropagation(); excluirOS(${os.id})" class="text-red-500 font-bold ml-2 text-lg">×</button>
+                <li class="p-2 border rounded hover:bg-blue-50 cursor-pointer flex justify-between items-center group" onclick='verOS(${JSON.stringify(os)})'>
+                    <div class="flex flex-col">
+                        <span class="font-bold text-blue-700 text-xs">${os.numero_os}</span>
+                        <span class="text-gray-700">${os.cliente}</span>
+                    </div>
+                    <div class="flex gap-2 opacity-0 group-hover:opacity-100 transition">
+                        <button onclick="event.stopPropagation(); prepararEdicao(${JSON.stringify(os)})" class="text-orange-500 hover:text-orange-700 text-lg" title="Editar">✎</button>
+                        <button onclick="event.stopPropagation(); excluirOS(${os.id})" class="text-red-500 hover:text-red-700 text-lg" title="Excluir">×</button>
+                    </div>
                 </li>
             `).join('');
         } catch (err) {
-            console.error("Erro ao carregar lista:", err);
+            console.error(err);
         }
     }
 
-    // 4. AUXILIARES
+    // 4. FUNÇÕES DE EDIÇÃO E TELA
+    function prepararEdicao(os) {
+        document.getElementById('edit-id').value = os.id;
+        document.getElementById('cliente').value = os.cliente;
+        document.getElementById('contato').value = os.contato;
+        document.getElementById('equipamento').value = os.equipamento;
+        document.getElementById('descricao').value = os.descricao;
+        document.getElementById('valor').value = os.valor;
+
+        // Visual de edição
+        document.getElementById('titulo-form').innerText = "Editando OS";
+        document.getElementById('form-container').classList.replace('border-blue-600', 'border-orange-500');
+        const btn = document.getElementById('btn-salvar');
+        btn.innerText = "Atualizar Dados";
+        btn.classList.replace('bg-blue-600', 'bg-orange-500');
+        document.getElementById('btn-cancelar').classList.remove('hidden');
+        
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    function cancelarEdicao() {
+        document.getElementById('edit-id').value = '';
+        limparCampos();
+        document.getElementById('titulo-form').innerText = "Nova Ordem";
+        document.getElementById('form-container').classList.replace('border-orange-500', 'border-blue-600');
+        const btn = document.getElementById('btn-salvar');
+        btn.innerText = "Salvar na Nuvem";
+        btn.classList.replace('bg-orange-500', 'bg-blue-600');
+        document.getElementById('btn-cancelar').classList.add('hidden');
+    }
+
     function verOS(os) {
         document.getElementById('view-numero').innerText = os.numero_os;
         document.getElementById('view-cliente').innerText = os.cliente;
@@ -186,9 +239,10 @@
     }
 
     async function excluirOS(id) {
-        if(confirm("Deseja excluir esta OS?")) {
+        if(confirm("Deseja apagar esta OS permanentemente?")) {
             await supaClient.from('ordens_de_servico').delete().eq('id', id);
             carregarOrdens();
+            document.getElementById('area-os').classList.add('hidden');
         }
     }
 
@@ -204,12 +258,7 @@
         });
     }
 
-    // Início automático
     verificarSessao();
 </script>
 </body>
-
 </html>
-
-
-

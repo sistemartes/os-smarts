@@ -175,28 +175,32 @@
         }
     }
 
-    async function carregarOrdens() {
-        try {
-            const { data, error } = await supaClient.from('ordens_de_servico').select('*').order('created_at', { ascending: false });
-            if (error) throw error;
+    // ATUALIZE ESTA FUNÇÃO
+async function carregarOrdens() {
+    try {
+        const { data, error } = await supaClient.from('ordens_de_servico').select('*').order('created_at', { ascending: false });
+        if (error) throw error;
 
-            const lista = document.getElementById('lista-os');
-            lista.innerHTML = data.map(os => `
-                <li class="p-2 border rounded hover:bg-blue-50 cursor-pointer flex justify-between items-center group" onclick='verOS(${JSON.stringify(os)})'>
-                    <div class="flex flex-col">
-                        <span class="font-bold text-blue-700 text-xs">${os.numero_os}</span>
-                        <span class="text-gray-700">${os.cliente}</span>
-                    </div>
-                    <div class="flex gap-2 opacity-0 group-hover:opacity-100 transition">
-                        <button onclick="event.stopPropagation(); prepararEdicao(${JSON.stringify(os)})" class="text-orange-500 hover:text-orange-700 text-lg" title="Editar">✎</button>
-                        <button onclick="event.stopPropagation(); excluirOS(${os.id})" class="text-red-500 hover:text-red-700 text-lg" title="Excluir">×</button>
-                    </div>
-                </li>
-            `).join('');
-        } catch (err) {
-            console.error(err);
-        }
+        // Salva os dados globalmente para a edição encontrar depois
+        window.minhasOrdens = data; 
+
+        const lista = document.getElementById('lista-os');
+        lista.innerHTML = data.map(os => `
+            <li class="p-2 border rounded hover:bg-blue-50 cursor-pointer flex justify-between items-center group" onclick='verOSDoBanco(${os.id})'>
+                <div class="flex flex-col text-left">
+                    <span class="font-bold text-blue-700 text-xs">${os.numero_os}</span>
+                    <span class="text-gray-700">${os.cliente}</span>
+                </div>
+                <div class="flex gap-2 md:opacity-0 group-hover:opacity-100 transition">
+                    <button onclick="event.stopPropagation(); clicarEditar(${os.id})" class="text-orange-500 hover:text-orange-700 text-lg p-1" title="Editar">✎</button>
+                    <button onclick="event.stopPropagation(); excluirOS(${os.id})" class="text-red-500 hover:text-red-700 text-lg p-1" title="Excluir">×</button>
+                </div>
+            </li>
+        `).join('');
+    } catch (err) {
+        console.error(err);
     }
+}
 
     // 4. FUNÇÕES DE EDIÇÃO E TELA
     function prepararEdicao(os) {
@@ -259,6 +263,36 @@
     }
 
     verificarSessao();
+
+    // ADICIONE/SUBSTITUA ESTAS FUNÇÕES DE APOIO
+function clicarEditar(id) {
+    const os = window.minhasOrdens.find(item => item.id === id);
+    if (os) {
+        document.getElementById('edit-id').value = os.id;
+        document.getElementById('cliente').value = os.cliente;
+        document.getElementById('contato').value = os.contato;
+        document.getElementById('equipamento').value = os.equipamento;
+        document.getElementById('descricao').value = os.descricao;
+        document.getElementById('valor').value = os.valor;
+
+        // Visual de edição
+        document.getElementById('titulo-form').innerText = "Editando OS";
+        document.getElementById('form-container').classList.replace('border-blue-600', 'border-orange-500');
+        const btn = document.getElementById('btn-salvar');
+        btn.innerText = "Atualizar Dados";
+        btn.classList.replace('bg-blue-600', 'bg-orange-500');
+        document.getElementById('btn-cancelar').classList.remove('hidden');
+        
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+}
+
+function verOSDoBanco(id) {
+    const os = window.minhasOrdens.find(item => item.id === id);
+    if (os) verOS(os);
+}
+    
 </script>
 </body>
 </html>
+

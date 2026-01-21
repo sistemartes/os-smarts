@@ -3,14 +3,13 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Smart OS Cloud - V5.0 Master CRM</title>
+    <title>Smart OS Cloud - V5.0 Fix</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
         @media print { .no-print { display: none !important; } body { background: white; } }
         .custom-scroll::-webkit-scrollbar { width: 5px; }
-        .custom-scroll::-webkit-scrollbar-track { background: #f1f1f1; }
         .custom-scroll::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
     </style>
 </head>
@@ -18,206 +17,157 @@
 
     <div id="tela-login" class="fixed inset-0 bg-slate-900 flex items-center justify-center z-[100]">
         <div class="bg-white p-8 rounded-2xl shadow-2xl w-96 text-center border-t-8 border-blue-600">
-            <h2 class="text-3xl font-black mb-6 text-slate-800 tracking-tighter">SISTEMA OS</h2>
+            <h2 class="text-3xl font-black mb-6 text-slate-800 tracking-tighter uppercase italic">Acesso OS</h2>
             <input type="email" id="login-email" placeholder="E-mail" class="w-full border p-3 mb-4 rounded-lg outline-none focus:ring-2 focus:ring-blue-500 bg-slate-50">
             <input type="password" id="login-senha" placeholder="Senha" class="w-full border p-3 mb-6 rounded-lg outline-none focus:ring-2 focus:ring-blue-500 bg-slate-50">
-            <button onclick="fazerLogin()" class="w-full bg-blue-600 text-white font-bold py-3 rounded-lg hover:bg-blue-700 shadow-lg">Acessar Painel</button>
+            <button onclick="fazerLogin()" class="w-full bg-blue-600 text-white font-bold py-3 rounded-lg hover:bg-blue-700 shadow-lg transition-all active:scale-95">Entrar no Sistema</button>
         </div>
     </div>
 
-    <div class="flex justify-between items-center mb-6 no-print max-w-6xl mx-auto">
-        <div>
-            <h1 class="text-2xl font-black text-slate-800 tracking-tighter uppercase italic">Smart OS <span class="text-blue-600 italic">Cloud</span></h1>
-            <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Controle de Fluxo & Clientes v5.0</p>
-        </div>
-        <div class="flex gap-2">
-            <button onclick="alternarVisaoClientes()" class="bg-white border border-slate-300 text-slate-600 px-4 py-2 rounded-lg text-xs font-bold hover:bg-slate-50 transition flex items-center gap-2 shadow-sm">
-                👥 <span id="btn-cliente-texto">Gerenciar Clientes</span>
-            </button>
-            <button onclick="fazerLogout()" class="bg-red-50 text-red-500 px-4 py-2 rounded-lg text-xs font-bold hover:bg-red-100 transition shadow-sm">Sair</button>
-        </div>
-    </div>
-    
-    <div class="container mx-auto max-w-6xl">
+    <div id="conteudo-sistema" class="hidden">
         
-        <div id="sessao-dashboard" class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8 no-print">
-            <div class="bg-white p-6 rounded-xl shadow-sm border border-slate-200 h-64 flex flex-col items-center">
-                <h3 class="text-[10px] font-black text-slate-400 mb-4 uppercase tracking-widest">Volume de Ordens</h3>
-                <canvas id="graficoBarras"></canvas>
+        <div class="flex justify-between items-center mb-6 no-print max-w-6xl mx-auto">
+            <div>
+                <h1 class="text-2xl font-black text-slate-800 tracking-tighter uppercase italic">Smart OS <span class="text-blue-600">Cloud</span></h1>
             </div>
-            <div class="bg-white p-6 rounded-xl shadow-sm border border-slate-200 h-64 flex flex-col items-center">
-                <h3 class="text-[10px] font-black text-slate-400 mb-2 uppercase tracking-widest">Distribuição de Status (%)</h3>
-                <div class="relative w-full h-32">
-                    <canvas id="graficoRosca"></canvas>
-                </div>
-                <div id="legenda-percentual" class="mt-6 text-[9px] font-bold text-slate-500 flex gap-4 uppercase"></div>
+            <div class="flex gap-2">
+                <button onclick="alternarVisaoClientes()" class="bg-white border border-slate-300 text-slate-600 px-4 py-2 rounded-lg text-xs font-bold hover:bg-slate-50 transition shadow-sm">
+                    👥 <span id="btn-cliente-texto">Gerenciar Clientes</span>
+                </button>
+                <button onclick="fazerLogout()" class="bg-red-50 text-red-500 px-4 py-2 rounded-lg text-xs font-bold hover:bg-red-100 shadow-sm">Sair</button>
             </div>
         </div>
 
-        <div id="sessao-clientes" class="hidden mb-8 no-print animate-in fade-in slide-in-from-top-4 duration-300">
-            <div class="bg-white p-6 rounded-xl shadow-md border-t-4 border-emerald-500">
-                <div class="flex justify-between items-center mb-4">
-                    <h2 class="font-black text-slate-800 uppercase text-sm italic">Base de Dados de Clientes</h2>
-                    <input type="text" id="busca-cliente" onkeyup="filtrarTabelaClientes()" placeholder="Filtrar cliente..." class="border p-2 rounded-lg text-xs w-64 outline-none focus:ring-1 focus:ring-emerald-500">
+        <div class="container mx-auto max-w-6xl">
+            <div id="sessao-dashboard" class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8 no-print">
+                <div class="bg-white p-4 rounded-xl shadow-sm border border-slate-200 h-64 flex flex-col items-center">
+                    <canvas id="graficoBarras"></canvas>
                 </div>
-                <div class="overflow-x-auto max-h-64 custom-scroll">
-                    <table class="w-full text-left text-xs">
-                        <thead class="bg-slate-50 text-slate-500 uppercase font-bold sticky top-0">
-                            <tr>
-                                <th class="p-3">Nome</th>
-                                <th class="p-3">Contato</th>
-                                <th class="p-3">E-mail</th>
-                                <th class="p-3">Endereço</th>
-                                <th class="p-3 text-center">Ações</th>
-                            </tr>
-                        </thead>
-                        <tbody id="tabela-clientes-corpo" class="divide-y divide-slate-100"></tbody>
-                    </table>
-                </div>
-            </div>
-        </div>
-
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-            
-            <div class="md:col-span-1 no-print">
-                <div class="bg-white p-6 rounded-xl shadow-md border-t-4 border-blue-600" id="form-container">
-                    <h2 id="titulo-form" class="text-xs font-black mb-5 text-blue-600 uppercase tracking-widest">Nova Ordem de Serviço</h2>
-                    <div class="space-y-3">
-                        <input type="hidden" id="edit-id">
-                        
-                        <div class="relative">
-                            <input type="text" id="cliente" list="lista-clientes-sugestao" oninput="checarClienteExistente(this.value)" placeholder="Nome do Cliente" autocomplete="off" name="c_name_v5" class="w-full border p-2.5 rounded-lg text-sm outline-none focus:border-blue-500 bg-slate-50 font-semibold">
-                            <datalist id="lista-clientes-sugestao"></datalist>
-                        </div>
-
-                        <input type="text" id="contato" placeholder="WhatsApp / Telefone" autocomplete="off" name="c_phone_v5" class="w-full border p-2.5 rounded-lg text-sm outline-none focus:border-blue-500 bg-slate-50">
-                        <input type="email" id="email" placeholder="E-mail" autocomplete="off" name="c_mail_v5" class="w-full border p-2.5 rounded-lg text-sm outline-none focus:border-blue-500 bg-slate-50">
-                        <input type="text" id="endereco" placeholder="Endereço Completo" autocomplete="off" name="c_end_v5" class="w-full border p-2.5 rounded-lg text-sm outline-none focus:border-blue-500 bg-slate-50">
-                        
-                        <div class="pt-2">
-                            <input type="text" id="equipamento" placeholder="Equipamento (Ex: Notebook Dell)" class="w-full border p-2.5 rounded-lg text-sm outline-none focus:border-blue-500 mb-3 shadow-inner">
-                            <textarea id="descricao" placeholder="Relato do problema..." class="w-full border p-2.5 rounded-lg text-sm h-24 outline-none focus:border-blue-500 bg-white resize-none"></textarea>
-                        </div>
-                        
-                        <div class="grid grid-cols-2 gap-2">
-                            <div class="relative">
-                                <span class="absolute left-3 top-2.5 text-slate-400 text-sm">R$</span>
-                                <input type="number" id="valor" placeholder="0,00" class="w-full border pl-9 p-2.5 rounded-lg text-sm outline-none focus:border-blue-500 font-bold">
-                            </div>
-                            <select id="status" class="w-full border p-2.5 rounded-lg text-sm outline-none focus:border-blue-500 bg-white font-black text-slate-600">
-                                <option value="Pendente">🟡 Pendente</option>
-                                <option value="Em Andamento">🔵 Em Andamento</option>
-                                <option value="Concluído">🟢 Concluído</option>
-                            </select>
-                        </div>
-                        
-                        <button onclick="salvarNoSupabase()" id="btn-salvar" class="w-full bg-blue-600 text-white font-black py-3 rounded-lg hover:bg-blue-700 transition shadow-lg uppercase text-xs tracking-widest mt-2">Salvar Registro</button>
-                        <button id="btn-cancelar" onclick="cancelarEdicao()" class="w-full bg-slate-400 text-white font-bold py-2 rounded-lg hidden transition mt-2 text-[10px] uppercase">Cancelar Edição</button>
+                <div class="bg-white p-4 rounded-xl shadow-sm border border-slate-200 h-64 flex flex-col items-center">
+                    <div class="relative w-full h-40">
+                        <canvas id="graficoRosca"></canvas>
                     </div>
+                    <div id="legenda-percentual" class="mt-4 text-[10px] font-bold text-slate-500 flex gap-4 uppercase"></div>
                 </div>
+            </div>
 
-                <div class="bg-white p-5 rounded-xl shadow-md mt-6 border-b-4 border-slate-300">
+            <div id="sessao-clientes" class="hidden mb-8 no-print">
+                <div class="bg-white p-6 rounded-xl shadow-md border-t-4 border-emerald-500">
                     <div class="flex justify-between items-center mb-4">
-                        <h3 class="font-black text-[10px] uppercase text-slate-400 tracking-tighter">Últimas OS</h3>
-                        <button onclick="carregarOrdens()" class="text-blue-500 text-[10px] font-bold">Atualizar ↻</button>
+                        <h2 class="font-black text-slate-800 uppercase text-sm">Base de Clientes</h2>
+                        <input type="text" id="busca-cliente" onkeyup="filtrarTabelaClientes()" placeholder="Filtrar..." class="border p-2 rounded-lg text-xs outline-none">
                     </div>
-                    <input type="text" id="busca" onkeyup="filtrarOrdens()" placeholder="Buscar OS..." class="w-full border p-2 rounded-lg text-xs mb-4 outline-none bg-slate-50 focus:bg-white">
-                    <ul id="lista-os" class="space-y-2 text-sm max-h-60 overflow-y-auto custom-scroll pr-1"></ul>
+                    <div class="overflow-x-auto max-h-64 custom-scroll">
+                        <table class="w-full text-left text-xs">
+                            <thead class="bg-slate-50 sticky top-0">
+                                <tr><th class="p-3">Nome</th><th class="p-3">Contato</th><th class="p-3">E-mail</th><th class="p-3 text-center">Ações</th></tr>
+                            </thead>
+                            <tbody id="tabela-clientes-corpo" class="divide-y divide-slate-100"></tbody>
+                        </table>
+                    </div>
                 </div>
             </div>
 
-            <div class="md:col-span-2">
-                <div id="area-os" class="bg-white p-12 rounded-xl shadow-2xl hidden min-h-[700px] relative border border-slate-100">
-                    <div class="flex justify-between border-b-4 border-slate-800 pb-8 mb-10">
-                        <div>
-                            <h1 class="text-4xl font-black uppercase italic text-slate-800 leading-none tracking-tighter">Ordem de Serviço</h1>
-                            <p class="text-blue-500 text-xs font-black mt-2 tracking-[0.3em] uppercase">Documento de Controle</p>
-                        </div>
-                        <div class="text-right">
-                            <p class="font-black text-3xl text-slate-800 leading-none" id="view-numero"></p>
-                            <p class="text-[10px] text-slate-400 font-bold mt-2 uppercase tracking-widest" id="view-data"></p>
-                            <div class="inline-block mt-3 px-4 py-1.5 rounded-full text-[10px] font-black border-2 uppercase" id="view-status-tag">STATUS: <span id="view-status"></span></div>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <div class="md:col-span-1 no-print">
+                    <div class="bg-white p-6 rounded-xl shadow-md border-t-4 border-blue-600" id="form-container">
+                        <div class="space-y-3">
+                            <input type="hidden" id="edit-id">
+                            <input type="text" id="cliente" list="lista-clientes-sugestao" oninput="checarClienteExistente(this.value)" placeholder="Nome do Cliente" autocomplete="off" name="c_v5_fix" class="w-full border p-2.5 rounded-lg text-sm bg-slate-50 font-bold outline-none focus:border-blue-500">
+                            <datalist id="lista-clientes-sugestao"></datalist>
+                            <input type="text" id="contato" placeholder="WhatsApp" autocomplete="off" class="w-full border p-2.5 rounded-lg text-sm bg-slate-50 outline-none">
+                            <input type="email" id="email" placeholder="E-mail" autocomplete="off" class="w-full border p-2.5 rounded-lg text-sm bg-slate-50 outline-none">
+                            <input type="text" id="endereco" placeholder="Endereço" autocomplete="off" class="w-full border p-2.5 rounded-lg text-sm bg-slate-50 outline-none">
+                            <hr>
+                            <input type="text" id="equipamento" placeholder="Equipamento" class="w-full border p-2.5 rounded-lg text-sm outline-none">
+                            <textarea id="descricao" placeholder="Defeito/Serviço" class="w-full border p-2.5 rounded-lg text-sm h-24 outline-none resize-none"></textarea>
+                            <div class="grid grid-cols-2 gap-2">
+                                <input type="number" id="valor" placeholder="R$ 0,00" class="w-full border p-2.5 rounded-lg text-sm font-bold outline-none">
+                                <select id="status" class="w-full border p-2.5 rounded-lg text-sm font-black outline-none bg-white">
+                                    <option value="Pendente">🟡 Pendente</option>
+                                    <option value="Em Andamento">🔵 Em Andamento</option>
+                                    <option value="Concluído">🟢 Concluído</option>
+                                </select>
+                            </div>
+                            <button onclick="salvarNoSupabase()" id="btn-salvar" class="w-full bg-blue-600 text-white font-black py-3 rounded-lg hover:bg-blue-700 shadow-lg uppercase text-xs">Salvar OS</button>
+                            <button id="btn-cancelar" onclick="cancelarEdicao()" class="w-full bg-slate-400 text-white font-bold py-2 rounded-lg hidden text-[10px] uppercase">Cancelar</button>
                         </div>
                     </div>
-                    
-                    <div class="space-y-10">
-                        <div class="grid grid-cols-2 gap-12">
-                            <div class="space-y-2">
-                                <p class="text-[10px] uppercase font-black text-slate-300">Proprietário / Cliente</p>
-                                <p id="view-cliente" class="text-xl font-black uppercase text-slate-800"></p>
-                                <div class="text-sm space-y-1 text-slate-500 font-medium">
-                                    <p id="view-contato"></p>
-                                    <p id="view-email"></p>
-                                    <p id="view-endereco" class="italic"></p>
-                                </div>
-                            </div>
-                            <div class="space-y-2">
-                                <p class="text-[10px] uppercase font-black text-slate-300">Equipamento Avaliado</p>
-                                <p id="view-equipamento" class="text-xl font-black uppercase text-blue-900"></p>
-                            </div>
-                        </div>
-
-                        <div>
-                            <p class="font-black mb-3 text-[10px] uppercase text-slate-300 tracking-widest">Parecer Técnico & Diagnóstico</p>
-                            <div id="view-descricao" class="p-8 bg-slate-50 rounded-2xl min-h-[200px] whitespace-pre-wrap text-sm leading-relaxed border border-slate-100 italic text-slate-700"></div>
-                        </div>
-
-                        <div class="flex justify-end">
-                            <div class="bg-slate-900 text-white px-10 py-6 rounded-3xl shadow-2xl text-right min-w-[250px] border-b-8 border-blue-600">
-                                <p class="text-[10px] uppercase font-bold text-slate-400 mb-1 tracking-widest">Valor do Investimento</p>
-                                <p class="text-4xl font-black">R$ <span id="view-valor"></span></p>
-                            </div>
-                        </div>
+                    <div class="bg-white p-5 rounded-xl shadow-md mt-6">
+                        <input type="text" id="busca" onkeyup="filtrarOrdens()" placeholder="Buscar OS..." class="w-full border p-2 rounded-lg text-xs mb-4 outline-none bg-slate-50">
+                        <ul id="lista-os" class="space-y-2 text-sm max-h-60 overflow-y-auto custom-scroll"></ul>
                     </div>
-
-                    <div class="mt-40 border-t-2 border-slate-100 pt-10 flex justify-between gap-20 text-[10px] uppercase font-black text-slate-300 italic">
-                        <div class="flex-1 border-t-2 border-slate-800 pt-3 text-center">Assinatura de Retirada</div>
-                        <div class="flex-1 border-t-2 border-slate-800 pt-3 text-center text-blue-600">Técnico Responsável</div>
-                    </div>
-                    
-                    <button onclick="window.print()" class="no-print mt-12 bg-blue-600 text-white px-12 py-4 rounded-xl font-black hover:bg-blue-700 shadow-xl transition w-full text-xs uppercase tracking-[0.3em]">Finalizar e Imprimir Via</button>
                 </div>
-                
-                <div id="aviso-vazio" class="flex flex-col items-center justify-center h-[500px] text-slate-300 border-2 border-dashed border-slate-200 rounded-3xl">
-                    <span class="text-6xl mb-4">📑</span>
-                    <p class="font-black uppercase text-xs tracking-widest">Selecione uma OS para visualizar</p>
+
+                <div class="md:col-span-2">
+                    <div id="area-os" class="bg-white p-12 rounded-xl shadow-2xl hidden min-h-[700px] border border-slate-100">
+                        <div class="flex justify-between border-b-4 border-slate-800 pb-8 mb-10">
+                            <div><h1 class="text-4xl font-black uppercase italic tracking-tighter">Ordem de Serviço</h1></div>
+                            <div class="text-right">
+                                <p class="font-black text-3xl text-slate-800" id="view-numero"></p>
+                                <p class="text-[10px] text-slate-400 font-bold" id="view-data"></p>
+                                <div class="mt-2 px-3 py-1 rounded-full text-[10px] font-black border-2" id="view-status-tag"><span id="view-status"></span></div>
+                            </div>
+                        </div>
+                        <div class="grid grid-cols-2 gap-10 mb-10">
+                            <div><p class="text-[10px] font-black text-slate-300">CLIENTE</p><p id="view-cliente" class="text-xl font-black uppercase"></p><p id="view-contato" class="text-sm text-slate-500"></p></div>
+                            <div><p class="text-[10px] font-black text-slate-300">EQUIPAMENTO</p><p id="view-equipamento" class="text-xl font-black uppercase text-blue-900"></p></div>
+                        </div>
+                        <div class="bg-slate-50 p-8 rounded-2xl mb-10 min-h-[200px] italic text-sm" id="view-descricao"></div>
+                        <div class="flex justify-end"><div class="bg-slate-900 text-white px-10 py-6 rounded-2xl shadow-xl text-right"><p class="text-4xl font-black">R$ <span id="view-valor"></span></p></div></div>
+                        <button onclick="window.print()" class="no-print mt-12 bg-blue-600 text-white px-12 py-4 rounded-xl font-black w-full text-xs uppercase tracking-widest">Imprimir OS</button>
+                    </div>
                 </div>
             </div>
         </div>
     </div>
 
 <script>
+    // Configurações do Supabase
     const SUPABASE_URL = 'https://awuuucqzhgmyuolqrifm.supabase.co';
     const SUPABASE_KEY = 'sb_publishable_M5bgMFw0R1rWLe5nfofFeg_NwLkjbBh'; 
     const supaClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
     let chartBarras = null, chartRosca = null, listaClientesGlobal = [], minhasOrdens = [];
 
+    // --- FUNÇÕES DE LOGIN (Declaradas no início para evitar erro de ReferenceError) ---
     async function fazerLogin() {
         const email = document.getElementById('login-email').value;
         const password = document.getElementById('login-senha').value;
+        const btn = document.querySelector('#tela-login button');
+        
         try {
+            btn.innerText = "Verificando...";
             const { error } = await supaClient.auth.signInWithPassword({ email, password });
             if (error) throw error;
             verificarSessao();
-        } catch (err) { alert("Acesso Inválido: " + err.message); }
+        } catch (err) { 
+            alert("Acesso Negado: Verifique e-mail e senha."); 
+            btn.innerText = "Entrar no Sistema";
+        }
     }
 
     async function verificarSessao() {
         const { data: { session } } = await supaClient.auth.getSession();
         if (session) { 
             document.getElementById('tela-login').classList.add('hidden'); 
+            document.getElementById('conteudo-sistema').classList.remove('hidden');
             await carregarClientes(); 
             await carregarOrdens(); 
-        } else { document.getElementById('tela-login').classList.remove('hidden'); }
+        } else { 
+            document.getElementById('tela-login').classList.remove('hidden'); 
+            document.getElementById('conteudo-sistema').classList.add('hidden');
+        }
     }
 
-    function fazerLogout() { supaClient.auth.signOut(); window.location.reload(); }
+    function fazerLogout() { 
+        supaClient.auth.signOut().then(() => window.location.reload()); 
+    }
 
-    // --- CRM: GESTÃO DE CLIENTES ---
+    // --- GESTÃO DE DADOS ---
     async function carregarClientes() {
-        const { data, error } = await supaClient.from('clientes').select('*').order('nome');
-        if (!error) {
+        const { data } = await supaClient.from('clientes').select('*').order('nome');
+        if (data) {
             listaClientesGlobal = data;
             document.getElementById('lista-clientes-sugestao').innerHTML = data.map(c => `<option value="${c.nome}">`).join('');
             atualizarTabelaClientes(data);
@@ -227,4 +177,123 @@
     function atualizarTabelaClientes(dados) {
         const corpo = document.getElementById('tabela-clientes-corpo');
         corpo.innerHTML = dados.map(c => `
-            <tr class="hover:bg-slate-50 transition">
+            <tr>
+                <td class="p-3 font-bold text-blue-700 uppercase">${c.nome}</td>
+                <td class="p-3">${c.contato || '-'}</td>
+                <td class="p-3">${c.email || '-'}</td>
+                <td class="p-3 text-center">
+                    <button onclick="filtrarOSPorCliente('${c.nome}')" title="Ver Histórico">🔍</button>
+                    <button onclick="prepararEdicaoCliente('${c.nome}')" class="ml-2">✏️</button>
+                </td>
+            </tr>`).join('');
+    }
+
+    async function salvarNoSupabase() {
+        const idEdicao = document.getElementById('edit-id').value;
+        const nomeCliente = document.getElementById('cliente').value;
+        if (!nomeCliente) return alert("Informe o cliente!");
+
+        try {
+            let cli = listaClientesGlobal.find(c => c.nome.toLowerCase() === nomeCliente.toLowerCase());
+            let idCli = cli ? cli.id : null;
+
+            const dadosCli = { 
+                nome: nomeCliente, contato: document.getElementById('contato').value,
+                email: document.getElementById('email').value, endereco: document.getElementById('endereco').value
+            };
+
+            if (!idCli) {
+                const { data: nCli } = await supaClient.from('clientes').insert([dadosCli]).select();
+                idCli = nCli[0].id;
+            } else {
+                await supaClient.from('clientes').update(dadosCli).eq('id', idCli);
+            }
+
+            const dadosOS = {
+                id_cliente: idCli, cliente: nomeCliente, contato: dadosCli.contato, equipamento: document.getElementById('equipamento').value,
+                descricao: document.getElementById('descricao').value, valor: parseFloat(document.getElementById('valor').value) || 0, status: document.getElementById('status').value
+            };
+
+            if (idEdicao) { await supaClient.from('ordens_de_servico').update(dadosOS).eq('id', idEdicao); } 
+            else { dadosOS.numero_os = 'OS-' + Math.floor(1000 + Math.random() * 9000); await supaClient.from('ordens_de_servico').insert([dadosOS]); }
+
+            cancelarEdicao(); await carregarClientes(); await carregarOrdens();
+        } catch (err) { alert("Erro ao salvar."); }
+    }
+
+    async function carregarOrdens() {
+        const { data } = await supaClient.from('ordens_de_servico').select('*').order('created_at', { ascending: false });
+        if (data) {
+            minhasOrdens = data;
+            renderizarListaOS(data);
+            atualizarGraficos(data);
+        }
+    }
+
+    function renderizarListaOS(dados) {
+        document.getElementById('lista-os').innerHTML = dados.map(os => `
+            <li class="p-3 border rounded-xl mb-2 cursor-pointer bg-white flex justify-between items-center" onclick='verOSDoBanco(${os.id})'>
+                <div class="text-left"><span class="text-[8px] font-black uppercase text-blue-500">● ${os.status}</span><br><span class="font-bold text-xs uppercase">${os.cliente}</span></div>
+                <button onclick="event.stopPropagation(); clicarEditar(${os.id})" class="text-amber-500">✏️</button>
+            </li>`).join('');
+    }
+
+    function atualizarGraficos(dados) {
+        const cont = { 'Pendente': 0, 'Em Andamento': 0, 'Concluído': 0 };
+        dados.forEach(os => { if(cont[os.status] !== undefined) cont[os.status]++; });
+        const cores = ['#f59e0b', '#3b82f6', '#10b981'];
+
+        if (chartBarras) chartBarras.destroy();
+        chartBarras = new Chart(document.getElementById('graficoBarras'), {
+            type: 'bar', data: { labels: Object.keys(cont), datasets: [{ data: Object.values(cont), backgroundColor: cores }] },
+            options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } } }
+        });
+
+        if (chartRosca) chartRosca.destroy();
+        chartRosca = new Chart(document.getElementById('graficoRosca'), {
+            type: 'doughnut', data: { labels: Object.keys(cont), datasets: [{ data: Object.values(cont), backgroundColor: cores }] },
+            options: { responsive: true, maintainAspectRatio: false, cutout: '80%', plugins: { legend: { display: false } } }
+        });
+    }
+
+    function verOSDoBanco(id) {
+        const os = minhasOrdens.find(i => i.id === id);
+        if (os) {
+            document.getElementById('area-os').classList.remove('hidden');
+            document.getElementById('view-numero').innerText = os.numero_os;
+            document.getElementById('view-cliente').innerText = os.cliente;
+            document.getElementById('view-contato').innerText = os.contato;
+            document.getElementById('view-equipamento').innerText = os.equipamento;
+            document.getElementById('view-descricao').innerText = os.descricao;
+            document.getElementById('view-valor').innerText = Number(os.valor).toLocaleString('pt-BR', { minimumFractionDigits: 2 });
+            document.getElementById('view-status').innerText = os.status;
+            document.getElementById('view-data').innerText = new Date(os.created_at).toLocaleDateString('pt-BR');
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+    }
+
+    function checarClienteExistente(nome) {
+        const c = listaClientesGlobal.find(cli => cli.nome.toLowerCase() === nome.toLowerCase());
+        if (c) {
+            document.getElementById('contato').value = c.contato || '';
+            document.getElementById('email').value = c.email || '';
+            document.getElementById('endereco').value = c.endereco || '';
+        }
+    }
+
+    function alternarVisaoClientes() {
+        const s = document.getElementById('sessao-clientes');
+        s.classList.toggle('hidden');
+    }
+
+    function cancelarEdicao() {
+        document.getElementById('edit-id').value = '';
+        ['cliente','contato','email','endereco','equipamento','descricao','valor'].forEach(id => document.getElementById(id).value = '');
+        document.getElementById('btn-cancelar').classList.add('hidden');
+    }
+
+    // Inicialização
+    verificarSessao();
+</script>
+</body>
+</html>

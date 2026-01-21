@@ -3,121 +3,361 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Ordem de Serviço Profissional</title>
+    <title>Smart OS Cloud - V4.5 CRM Premium</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <style>
-        @media print {
-            .no-print { display: none; }
-            body { background: white; p: 0; }
-            .print-border { border: 1px solid #e2e8f0; border-radius: 0; shadow: none; }
-        }
-    </style>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>@media print { .no-print { display: none; } body { background: white; } }</style>
 </head>
-<body class="bg-slate-100 font-sans text-slate-800 p-4 md:p-8">
+<body class="bg-gray-100 p-4 font-sans text-gray-800">
 
-    <div class="max-w-4xl mx-auto bg-white shadow-xl rounded-lg overflow-hidden print-border">
-        
-        <div class="bg-slate-800 p-6 text-white flex justify-between items-center">
-            <div>
-                <h1 class="text-2xl font-bold tracking-tight">ORDEM DE SERVIÇO</h1>
-                <p class="text-slate-400 text-sm italic">Protocolo de Atendimento Técnico</p>
-            </div>
-            <div class="text-right">
-                <p class="font-mono text-lg text-blue-400">Nº 0001</p>
-                <p class="text-xs text-slate-400" id="data-atual"></p>
-            </div>
-        </div>
-
-        <div class="p-8 space-y-6">
-            
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
-                <div class="space-y-4">
-                    <label class="block text-xs font-bold uppercase tracking-widest text-slate-500 border-l-4 border-blue-500 pl-2">Dados do Cliente</label>
-                    
-                    <input type="text" 
-                           id="cliente" 
-                           list="lista-clientes-sugestao" 
-                           oninput="checarClienteExistente(this.value)" 
-                           placeholder="Nome Completo" 
-                           autocomplete="off" 
-                           name="input_cliente_f82"
-                           class="w-full border-b-2 border-slate-100 p-2 outline-none focus:border-blue-500 transition-all bg-slate-50 rounded-t">
-                    <datalist id="lista-clientes-sugestao"></datalist>
-
-                    <input type="text" 
-                           id="endereco" 
-                           placeholder="Endereço" 
-                           autocomplete="off"
-                           name="input_end_x91"
-                           class="w-full border-b-2 border-slate-100 p-2 outline-none focus:border-blue-500 transition-all bg-slate-50">
-
-                    <input type="email" 
-                           id="email" 
-                           placeholder="E-mail" 
-                           autocomplete="off"
-                           name="input_mail_z33"
-                           class="w-full border-b-2 border-slate-100 p-2 outline-none focus:border-blue-500 transition-all bg-slate-50">
-                </div>
-
-                <div class="space-y-4">
-                    <label class="block text-xs font-bold uppercase tracking-widest text-slate-500 border-l-4 border-blue-500 pl-2">Equipamento</label>
-                    <input type="text" placeholder="Modelo do Aparelho" class="w-full border-b-2 border-slate-100 p-2 outline-none focus:border-blue-500 transition-all">
-                    <input type="text" placeholder="IMEI / Número de Série" class="w-full border-b-2 border-slate-100 p-2 outline-none focus:border-blue-500 transition-all">
-                </div>
-            </div>
-
-            <hr class="border-slate-100">
-
-            <div class="space-y-4">
-                <label class="block text-xs font-bold uppercase tracking-widest text-slate-500">Relato do Problema e Diagnóstico Inicial</label>
-                <textarea rows="4" placeholder="Descreva aqui os defeitos relatados e o estado visual do aparelho..." class="w-full border-2 border-slate-50 p-3 rounded-lg outline-none focus:border-blue-500 transition-all bg-slate-50 resize-none"></textarea>
-            </div>
-
-            <div class="pt-12 flex justify-between items-end border-t border-slate-100 mt-8">
-                <div class="text-[10px] text-slate-400 w-1/2 leading-tight">
-                    <p>Este documento comprova a entrada do aparelho em nossa assistência. A garantia de serviços é de 90 dias conforme o CDC, limitada às peças substituídas.</p>
-                </div>
-                <div class="w-1/3 border-t border-slate-800 text-center pt-2">
-                    <p class="text-xs font-bold uppercase text-slate-700">Assinatura do Cliente</p>
-                </div>
-            </div>
-        </div>
-
-        <div class="bg-slate-50 p-6 flex justify-end gap-4 no-print border-t border-slate-100">
-            <button onclick="window.print()" class="bg-blue-600 text-white px-8 py-2 rounded-full shadow-lg hover:bg-blue-700 transition-all font-semibold uppercase text-sm tracking-widest">
-                Gerar Impressão
-            </button>
+    <div id="tela-login" class="fixed inset-0 bg-gray-900 flex items-center justify-center z-50">
+        <div class="bg-white p-8 rounded-lg shadow-xl w-96 text-center">
+            <h2 class="text-2xl font-bold mb-6 text-blue-600">Acesso Restrito</h2>
+            <input type="email" id="login-email" placeholder="E-mail" class="w-full border p-2 mb-4 rounded outline-none focus:ring-2 focus:ring-blue-500">
+            <input type="password" id="login-senha" placeholder="Senha" class="w-full border p-2 mb-6 rounded outline-none focus:ring-2 focus:ring-blue-500">
+            <button onclick="fazerLogin()" class="w-full bg-blue-600 text-white font-bold py-2 rounded hover:bg-blue-700 transition">Entrar no Sistema</button>
         </div>
     </div>
 
-    <script>
-        // Data automática ao abrir
-        document.getElementById('data-atual').innerText = new Date().toLocaleDateString('pt-BR');
+    <div class="flex justify-between items-center mb-6 no-print max-w-6xl mx-auto">
+        <h1 class="text-2xl font-bold text-blue-700">Gestão de OS <span class="text-xs font-normal text-gray-400 italic">v4.5 Premium</span></h1>
+        <button onclick="fazerLogout()" class="bg-red-500 text-white px-3 py-1 rounded text-sm hover:bg-red-600 transition">Sair</button>
+    </div>
+    
+    <div class="container mx-auto max-w-6xl">
+        
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8 no-print">
+            <div class="bg-white p-4 rounded-lg shadow-md border-b-4 border-blue-500 h-56 flex flex-col items-center">
+                <h3 class="text-xs font-bold text-gray-500 mb-2 uppercase tracking-widest">Volume de Trabalho</h3>
+                <canvas id="graficoBarras"></canvas>
+            </div>
+            <div class="bg-white p-4 rounded-lg shadow-md border-b-4 border-purple-500 h-56 flex flex-col items-center">
+                <h3 class="text-xs font-bold text-gray-500 mb-2 uppercase tracking-widest">Proporção de Status</h3>
+                <canvas id="graficoRosca"></canvas>
+            </div>
+        </div>
 
-        // Simulação de Banco de Dados de Clientes
-        const clientesDB = [
-            { nome: "Ana Silva", endereco: "Rua das Flores, 123 - Centro", email: "ana.silva@email.com" },
-            { nome: "Bruno Oliveira", endereco: "Av. Paulista, 1500 - SP", email: "bruno.oliveira@email.com" },
-            { nome: "Carlos Souza", endereco: "Rua Maranhão, 45 - Bairro Norte", email: "contato.carlos@email.com" }
-        ];
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+            
+            <div class="md:col-span-1 no-print">
+                <div class="bg-white p-6 rounded-lg shadow-md border-t-4 border-blue-600" id="form-container">
+                    <h2 id="titulo-form" class="text-sm font-black mb-4 text-blue-600 uppercase tracking-tighter">Dados da Nova Ordem</h2>
+                    <div class="space-y-3">
+                        <input type="hidden" id="edit-id">
+                        
+                        <div class="relative">
+                            <input type="text" id="cliente" list="lista-clientes-sugestao" oninput="checarClienteExistente(this.value)" placeholder="Nome do Cliente" autocomplete="off" name="campo_cliente_xyz" class="w-full border p-2 rounded text-sm outline-none focus:border-blue-500 bg-gray-50">
+                            <datalist id="lista-clientes-sugestao"></datalist>
+                        </div>
 
-        // Carregar sugestões no datalist
-        const datalist = document.getElementById('lista-clientes-sugestao');
-        clientesDB.forEach(c => {
-            let option = document.createElement('option');
-            option.value = c.nome;
-            datalist.appendChild(option);
+                        <input type="text" id="contato" placeholder="Telefone/WhatsApp" autocomplete="off" name="campo_contato_xyz" class="w-full border p-2 rounded text-sm outline-none focus:border-blue-500 bg-gray-50">
+                        <input type="email" id="email" placeholder="E-mail" autocomplete="off" name="campo_email_xyz" class="w-full border p-2 rounded text-sm outline-none focus:border-blue-500 bg-gray-50">
+                        <input type="text" id="endereco" placeholder="Endereço Completo" autocomplete="off" name="campo_end_xyz" class="w-full border p-2 rounded text-sm outline-none focus:border-blue-500 bg-gray-50">
+                        
+                        <hr class="my-2 border-gray-100">
+                        
+                        <input type="text" id="equipamento" placeholder="Equipamento / Modelo" class="w-full border p-2 rounded text-sm outline-none focus:border-blue-500">
+                        <textarea id="descricao" placeholder="Descrição técnica do defeito..." class="w-full border p-2 rounded text-sm h-24 outline-none focus:border-blue-500"></textarea>
+                        
+                        <div class="grid grid-cols-2 gap-2">
+                            <input type="number" id="valor" placeholder="Valor R$" class="w-full border p-2 rounded text-sm outline-none focus:border-blue-500">
+                            <select id="status" class="w-full border p-2 rounded text-sm outline-none focus:border-blue-500 bg-white font-bold">
+                                <option value="Pendente">🟡 Pendente</option>
+                                <option value="Em Andamento">🔵 Em Andamento</option>
+                                <option value="Concluído">🟢 Concluído</option>
+                            </select>
+                        </div>
+                        
+                        <button onclick="salvarNoSupabase()" id="btn-salvar" class="w-full bg-blue-600 text-white font-bold py-2 rounded hover:bg-blue-700 transition shadow-lg">Salvar e Sincronizar</button>
+                        <button id="btn-cancelar" onclick="cancelarEdicao()" class="w-full bg-gray-400 text-white font-bold py-1 rounded hidden transition mt-2 text-xs">Cancelar Alteração</button>
+                    </div>
+                </div>
+
+                <div class="bg-white p-6 rounded-lg shadow-md mt-6 border-t-4 border-gray-300">
+                    <h3 class="font-bold mb-3 text-xs uppercase text-gray-400 tracking-widest">Histórico de OS</h3>
+                    <input type="text" id="busca" onkeyup="filtrarOrdens()" placeholder="Buscar cliente ou OS..." class="w-full border p-2 rounded text-sm mb-4 outline-none bg-gray-50">
+                    <ul id="lista-os" class="space-y-2 text-sm max-h-64 overflow-y-auto"></ul>
+                </div>
+            </div>
+
+            <div class="md:col-span-2">
+                <div id="area-os" class="bg-white p-10 rounded shadow-lg hidden min-h-[600px] relative border border-gray-200">
+                    <div class="flex justify-between border-b-2 border-gray-800 pb-6 mb-8">
+                        <div>
+                            <h1 class="text-3xl font-black uppercase italic text-gray-800 leading-none">Ordem de Serviço</h1>
+                            <p class="text-gray-400 text-[10px] font-bold mt-1 tracking-widest uppercase">Sistema Digital Cloud Sync</p>
+                        </div>
+                        <div class="text-right">
+                            <p class="font-black text-2xl text-blue-600 leading-none" id="view-numero"></p>
+                            <p class="text-[10px] text-gray-500 font-bold mt-2 uppercase" id="view-data"></p>
+                            <div class="inline-block mt-2 px-3 py-1 rounded text-[10px] font-black border" id="view-status-tag">STATUS: <span id="view-status"></span></div>
+                        </div>
+                    </div>
+                    
+                    <div class="space-y-8">
+                        <div class="grid grid-cols-2 gap-8 text-sm">
+                            <div class="space-y-1">
+                                <p class="text-[10px] uppercase font-black text-gray-400 tracking-tighter">Cliente / Proprietário</p>
+                                <p id="view-cliente" class="text-lg font-bold uppercase"></p>
+                                <p id="view-contato" class="text-gray-600"></p>
+                                <p id="view-email" class="text-gray-500 text-xs"></p>
+                                <p id="view-endereco" class="text-gray-500 text-xs italic"></p>
+                            </div>
+                            <div class="space-y-1">
+                                <p class="text-[10px] uppercase font-black text-gray-400 tracking-tighter">Equipamento</p>
+                                <p id="view-equipamento" class="text-lg font-bold uppercase text-blue-900"></p>
+                            </div>
+                        </div>
+
+                        <div>
+                            <p class="font-black mb-2 text-[10px] uppercase text-gray-400 tracking-tighter">Laudo Técnico / Descrição do Serviço</p>
+                            <div id="view-descricao" class="p-6 bg-gray-50 rounded-xl min-h-[160px] whitespace-pre-wrap text-sm leading-relaxed border border-gray-100 italic"></div>
+                        </div>
+
+                        <div class="flex justify-end">
+                            <div class="bg-blue-900 text-white px-8 py-4 rounded-2xl shadow-xl text-right min-w-[200px]">
+                                <p class="text-[10px] uppercase font-bold text-blue-300 mb-1">Total Geral</p>
+                                <p class="text-3xl font-black">R$ <span id="view-valor"></span></p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="mt-32 border-t border-gray-200 pt-8 flex justify-between gap-16 text-[10px] uppercase font-bold text-gray-300">
+                        <div class="flex-1 border-t border-gray-300 pt-2 text-center">Assinatura do Cliente</div>
+                        <div class="flex-1 border-t border-gray-300 pt-2 text-center text-blue-400 italic">Responsável Técnico</div>
+                    </div>
+                    <button onclick="window.print()" class="no-print mt-12 bg-gray-800 text-white px-10 py-4 rounded-xl font-bold hover:bg-black shadow-xl transition w-full text-xs uppercase tracking-[0.2em]">🖨️ Finalizar e Imprimir OS</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+<script>
+    const SUPABASE_URL = 'https://awuuucqzhgmyuolqrifm.supabase.co';
+    const SUPABASE_KEY = 'sb_publishable_M5bgMFw0R1rWLe5nfofFeg_NwLkjbBh'; 
+    const supaClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+    let chartBarras = null, chartRosca = null, listaClientesGlobal = [];
+
+    async function fazerLogin() {
+        const email = document.getElementById('login-email').value;
+        const password = document.getElementById('login-senha').value;
+        try {
+            const { error } = await supaClient.auth.signInWithPassword({ email, password });
+            if (error) throw error;
+            verificarSessao();
+        } catch (err) { alert("Acesso negado: " + err.message); }
+    }
+
+    async function verificarSessao() {
+        const { data: { session } } = await supaClient.auth.getSession();
+        if (session) { 
+            document.getElementById('tela-login').classList.add('hidden'); 
+            carregarClientes(); 
+            carregarOrdens(); 
+        } else { document.getElementById('tela-login').classList.remove('hidden'); }
+    }
+
+    async function fazerLogout() { await supaClient.auth.signOut(); window.location.reload(); }
+
+    async function carregarClientes() {
+        const { data, error } = await supaClient.from('clientes').select('*').order('nome');
+        if (!error) {
+            listaClientesGlobal = data;
+            document.getElementById('lista-clientes-sugestao').innerHTML = data.map(c => `<option value="${c.nome}">`).join('');
+        }
+    }
+
+    function checarClienteExistente(nome) {
+        const c = listaClientesGlobal.find(cli => cli.nome.toLowerCase() === nome.toLowerCase());
+        if (c) {
+            document.getElementById('contato').value = c.contato || '';
+            document.getElementById('email').value = c.email || '';
+            document.getElementById('endereco').value = c.endereco || '';
+        }
+    }
+
+    async function salvarNoSupabase() {
+        const idEdicao = document.getElementById('edit-id').value;
+        const btn = document.getElementById('btn-salvar');
+        const nomeCliente = document.getElementById('cliente').value;
+        if (!nomeCliente) return alert("Cliente obrigatório!");
+
+        try {
+            btn.disabled = true; btn.innerText = "Sincronizando...";
+
+            let cli = listaClientesGlobal.find(c => c.nome.toLowerCase() === nomeCliente.toLowerCase());
+            let idCli = cli ? cli.id : null;
+
+            if (!idCli) {
+                const { data: nCli, error: eCli } = await supaClient.from('clientes').insert([{ 
+                    nome: nomeCliente, 
+                    contato: document.getElementById('contato').value,
+                    email: document.getElementById('email').value,
+                    endereco: document.getElementById('endereco').value
+                }]).select();
+                if (eCli) throw eCli;
+                idCli = nCli[0].id;
+                await carregarClientes();
+            } else {
+                // Opcional: Atualiza dados do cliente se já existir
+                await supaClient.from('clientes').update({
+                    contato: document.getElementById('contato').value,
+                    email: document.getElementById('email').value,
+                    endereco: document.getElementById('endereco').value
+                }).eq('id', idCli);
+            }
+
+            const dadosOS = {
+                id_cliente: idCli,
+                cliente: nomeCliente,
+                contato: document.getElementById('contato').value,
+                equipamento: document.getElementById('equipamento').value,
+                descricao: document.getElementById('descricao').value,
+                valor: parseFloat(document.getElementById('valor').value) || 0,
+                status: document.getElementById('status').value
+            };
+
+            if (idEdicao) {
+                await supaClient.from('ordens_de_servico').update(dadosOS).eq('id', idEdicao);
+            } else {
+                dadosOS.numero_os = 'OS-' + Math.floor(1000 + Math.random() * 9000);
+                await supaClient.from('ordens_de_servico').insert([dadosOS]);
+            }
+
+            cancelarEdicao(); carregarOrdens();
+        } catch (err) { alert("Erro: " + err.message); } 
+        finally { btn.disabled = false; btn.innerText = "Salvar na Nuvem"; }
+    }
+
+    async function carregarOrdens() {
+        try {
+            const { data, error } = await supaClient.from('ordens_de_servico').select('*').order('created_at', { ascending: false });
+            if (error) throw error;
+            window.minhasOrdens = data; 
+            atualizarGraficos(data);
+
+            document.getElementById('lista-os').innerHTML = data.map(os => {
+                let cor = os.status === "Em Andamento" ? "text-blue-600" : (os.status === "Concluído" ? "text-green-600" : "text-yellow-600");
+                return `
+                    <li class="p-2 border rounded hover:bg-blue-50 cursor-pointer flex justify-between items-center group transition shadow-sm bg-white" onclick='verOSDoBanco(${os.id})'>
+                        <div class="flex flex-col text-left">
+                            <div class="flex items-center gap-2">
+                                <span class="font-black text-blue-700 text-[9px]">${os.numero_os}</span>
+                                <span class="text-[8px] font-black uppercase ${cor}">● ${os.status || 'Pendente'}</span>
+                            </div>
+                            <span class="text-gray-700 font-bold truncate w-32">${os.cliente}</span>
+                        </div>
+                        <div class="flex gap-2">
+                            <button onclick="event.stopPropagation(); clicarEditar(${os.id})" class="text-orange-400 hover:text-orange-600 text-lg">✎</button>
+                            <button onclick="event.stopPropagation(); excluirOS(${os.id})" class="text-red-300 hover:text-red-600 text-lg">×</button>
+                        </div>
+                    </li>`;
+            }).join('');
+        } catch (err) { console.error(err); }
+    }
+
+    function atualizarGraficos(dados) {
+        const cont = { 'Pendente': 0, 'Em Andamento': 0, 'Concluído': 0 };
+        dados.forEach(os => { if(cont[os.status] !== undefined) cont[os.status]++; else cont['Pendente']++; });
+        const cores = ['#eab308', '#2563eb', '#16a34a'];
+
+        if (chartBarras) chartBarras.destroy();
+        chartBarras = new Chart(document.getElementById('graficoBarras'), {
+            type: 'bar', data: { labels: Object.keys(cont), datasets: [{ label: 'Qtd', data: Object.values(cont), backgroundColor: cores }] },
+            options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } } }
         });
 
-        // Função de busca e preenchimento automático
-        function checarClienteExistente(valor) {
-            const clienteEncontrado = clientesDB.find(c => c.nome.toLowerCase() === valor.toLowerCase());
-            
-            if (clienteEncontrado) {
-                document.getElementById('endereco').value = clienteEncontrado.endereco;
-                document.getElementById('email').value = clienteEncontrado.email;
+        if (chartRosca) chartRosca.destroy();
+        chartRosca = new Chart(document.getElementById('graficoRosca'), {
+            type: 'doughnut', data: { labels: Object.keys(cont), datasets: [{ data: Object.values(cont), backgroundColor: cores }] },
+            options: { responsive: true, maintainAspectRatio: false, cutout: '75%' }
+        });
+    }
+
+    function clicarEditar(id) {
+        const os = window.minhasOrdens.find(i => i.id === id);
+        if (os) {
+            document.getElementById('edit-id').value = os.id;
+            document.getElementById('cliente').value = os.cliente;
+            document.getElementById('contato').value = os.contato;
+            document.getElementById('equipamento').value = os.equipamento;
+            document.getElementById('descricao').value = os.descricao;
+            document.getElementById('valor').value = os.valor;
+            document.getElementById('status').value = os.status || 'Pendente';
+            // Tenta buscar e-mail e endereço se já houver cliente vinculado
+            const cli = listaClientesGlobal.find(c => c.nome === os.cliente);
+            if (cli) {
+                document.getElementById('email').value = cli.email || '';
+                document.getElementById('endereco').value = cli.endereco || '';
             }
+            
+            document.getElementById('titulo-form').innerText = "Editando Registro";
+            document.getElementById('form-container').classList.replace('border-blue-600', 'border-orange-500');
+            document.getElementById('btn-salvar').innerText = "Atualizar OS";
+            document.getElementById('btn-cancelar').classList.remove('hidden');
+            window.scrollTo({ top: 0, behavior: 'smooth' });
         }
-    </script>
+    }
+
+    function verOSDoBanco(id) {
+        const os = window.minhasOrdens.find(i => i.id === id);
+        if (os) {
+            document.getElementById('view-numero').innerText = os.numero_os;
+            document.getElementById('view-cliente').innerText = os.cliente;
+            document.getElementById('view-contato').innerText = os.contato || '(Sem telefone)';
+            document.getElementById('view-equipamento').innerText = os.equipamento;
+            document.getElementById('view-descricao').innerText = os.descricao;
+            document.getElementById('view-valor').innerText = Number(os.valor).toLocaleString('pt-BR', { minimumFractionDigits: 2 });
+            document.getElementById('view-status').innerText = (os.status || 'Pendente').toUpperCase();
+            
+            const cli = listaClientesGlobal.find(c => c.nome === os.cliente);
+            document.getElementById('view-email').innerText = cli ? cli.email : '';
+            document.getElementById('view-endereco').innerText = cli ? cli.endereco : '';
+
+            let cor = os.status === "Em Andamento" ? "blue" : (os.status === "Concluído" ? "green" : "orange");
+            document.getElementById('view-status-tag').style.borderColor = cor;
+            document.getElementById('view-status-tag').style.color = cor;
+
+            const d = new Date(os.created_at);
+            document.getElementById('view-data').innerText = d.toLocaleDateString('pt-BR') + ' às ' + d.toLocaleTimeString('pt-BR', {hour: '2-digit', minute:'2-digit'});
+            
+            document.getElementById('area-os').classList.remove('hidden');
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+    }
+
+    function cancelarEdicao() {
+        document.getElementById('edit-id').value = '';
+        limparCampos();
+        document.getElementById('titulo-form').innerText = "Nova Ordem";
+        document.getElementById('form-container').classList.replace('border-orange-500', 'border-blue-600');
+        document.getElementById('btn-salvar').innerText = "Salvar na Nuvem";
+        document.getElementById('btn-cancelar').classList.add('hidden');
+    }
+
+    async function excluirOS(id) {
+        if(confirm("Excluir definitivamente?")) {
+            await supaClient.from('ordens_de_servico').delete().eq('id', id);
+            carregarOrdens();
+            document.getElementById('area-os').classList.add('hidden');
+        }
+    }
+
+    function limparCampos() {
+        ['cliente', 'contato', 'email', 'endereco', 'equipamento', 'descricao', 'valor'].forEach(id => {
+            const el = document.getElementById(id); if(el) el.value = '';
+        });
+        document.getElementById('status').value = 'Pendente';
+    }
+
+    function filtrarOrdens() {
+        const t = document.getElementById('busca').value.toLowerCase();
+        document.querySelectorAll('#lista-os li').forEach(item => { item.style.display = item.innerText.toLowerCase().includes(t) ? "flex" : "none"; });
+    }
+
+    verificarSessao();
+</script>
 </body>
 </html>

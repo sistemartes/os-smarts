@@ -240,6 +240,9 @@ async function carregarOrdens() {
         document.getElementById('view-descricao').innerText = os.descricao;
         document.getElementById('view-valor').innerText = Number(os.valor).toLocaleString('pt-BR', { minimumFractionDigits: 2 });
         document.getElementById('area-os').classList.remove('hidden');
+            // Exemplo de como formatar a data para o padrão brasileiro
+        const dataFormatada = new Date(os.created_at).toLocaleDateString('pt-BR');
+        document.getElementById('view-data').innerText = dataFormatada;
     }
 
     async function excluirOS(id) {
@@ -295,4 +298,5 @@ function verOSDoBanco(id) {
 </script>
 </body>
 </html>
+
 

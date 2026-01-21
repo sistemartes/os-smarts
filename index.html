@@ -3,28 +3,41 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Sistema de OS Cloud - V2.2</title>
+    <title>Sistema de OS Cloud - V3.0 Dashboard</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>@media print { .no-print { display: none; } }</style>
 </head>
-<body class="bg-gray-100 p-4">
+<body class="bg-gray-100 p-4 font-sans text-gray-800">
 
     <div id="tela-login" class="fixed inset-0 bg-gray-900 flex items-center justify-center z-50">
         <div class="bg-white p-8 rounded-lg shadow-xl w-96">
             <h2 class="text-2xl font-bold mb-6 text-center text-blue-600">Acesso Restrito</h2>
-            <input type="email" id="login-email" placeholder="E-mail" class="w-full border p-2 mb-4 rounded outline-none focus:ring-2 focus:ring-blue-500">
-            <input type="password" id="login-senha" placeholder="Senha" class="w-full border p-2 mb-6 rounded outline-none focus:ring-2 focus:ring-blue-500">
+            <input type="email" id="login-email" placeholder="E-mail" class="w-full border p-2 mb-4 rounded outline-none focus:ring-2 focus:ring-blue-500 text-sm">
+            <input type="password" id="login-senha" placeholder="Senha" class="w-full border p-2 mb-6 rounded outline-none focus:ring-2 focus:ring-blue-500 text-sm">
             <button onclick="fazerLogin()" class="w-full bg-blue-600 text-white font-bold py-2 rounded hover:bg-blue-700 transition">Entrar</button>
         </div>
     </div>
 
-    <div class="flex justify-between items-center mb-6 no-print max-w-5xl mx-auto">
-        <h1 class="text-2xl font-bold text-blue-700">Gestão de OS <span class="text-xs font-normal text-gray-400">v2.2</span></h1>
+    <div class="flex justify-between items-center mb-6 no-print max-w-6xl mx-auto">
+        <h1 class="text-2xl font-bold text-blue-700">Gestão de OS <span class="text-xs font-normal text-gray-400 italic">v3.0 Dashboard</span></h1>
         <button onclick="fazerLogout()" class="bg-red-500 text-white px-3 py-1 rounded text-sm hover:bg-red-600 transition">Sair</button>
     </div>
     
-    <div class="container mx-auto max-w-5xl">
+    <div class="container mx-auto max-w-6xl">
+        
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8 no-print">
+            <div class="bg-white p-4 rounded-lg shadow-md border-b-4 border-blue-500 h-64 flex flex-col items-center">
+                <h3 class="text-sm font-bold text-gray-500 mb-2 uppercase">Volume de Trabalho (Quantidade)</h3>
+                <canvas id="graficoBarras"></canvas>
+            </div>
+            <div class="bg-white p-4 rounded-lg shadow-md border-b-4 border-purple-500 h-64 flex flex-col items-center">
+                <h3 class="text-sm font-bold text-gray-500 mb-2 uppercase">Proporção de Status (%)</h3>
+                <canvas id="graficoRosca"></canvas>
+            </div>
+        </div>
+
         <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
             
             <div class="md:col-span-1 no-print">
@@ -47,28 +60,28 @@
                         </div>
                         
                         <button onclick="salvarNoSupabase()" id="btn-salvar" class="w-full bg-blue-600 text-white font-bold py-2 rounded hover:bg-blue-700 transition">Salvar na Nuvem</button>
-                        <button id="btn-cancelar" onclick="cancelarEdicao()" class="w-full bg-gray-400 text-white font-bold py-1 rounded hidden transition">Cancelar Alteração</button>
+                        <button id="btn-cancelar" onclick="cancelarEdicao()" class="w-full bg-gray-400 text-white font-bold py-1 rounded hidden transition mt-2">Cancelar Alteração</button>
                     </div>
                 </div>
 
                 <div class="bg-white p-6 rounded-lg shadow-md mt-6">
                     <h3 class="font-bold mb-3 border-b pb-2">Histórico</h3>
-                    <input type="text" id="busca" onkeyup="filtrarOrdens()" placeholder="Buscar..." class="w-full border p-2 rounded text-sm mb-4 outline-none">
+                    <input type="text" id="busca" onkeyup="filtrarOrdens()" placeholder="Buscar cliente ou OS..." class="w-full border p-2 rounded text-sm mb-4 outline-none focus:ring-1 focus:ring-blue-400">
                     <ul id="lista-os" class="space-y-2 text-sm max-h-80 overflow-y-auto"></ul>
                 </div>
             </div>
 
             <div class="md:col-span-2">
-                <div id="area-os" class="bg-white p-8 rounded shadow-lg hidden min-h-[500px] relative">
+                <div id="area-os" class="bg-white p-8 rounded shadow-lg hidden min-h-[500px] relative border border-gray-200">
                     <div class="flex justify-between border-b-2 border-gray-800 pb-4 mb-6">
                         <div>
                             <h1 class="text-2xl font-bold uppercase">Ordem de Serviço</h1>
-                            <p class="text-gray-500 text-xs italic">Documento gerado digitalmente</p>
+                            <p class="text-gray-500 text-[10px] italic font-medium">DOCUMENTO GERADO VIA SISTEMA SMART CLOUD</p>
                         </div>
                         <div class="text-right">
-                            <p class="font-bold">Nº: <span id="view-numero"></span></p>
-                            <p class="text-xs text-gray-500">Data: <span id="view-data"></span></p>
-                            <p class="text-xs font-bold" id="view-status-label">Status: <span id="view-status"></span></p>
+                            <p class="font-bold text-lg">Nº: <span id="view-numero"></span></p>
+                            <p class="text-xs text-gray-500">Emitido em: <span id="view-data"></span></p>
+                            <p class="text-xs font-bold mt-1" id="view-status-label">Status: <span id="view-status"></span></p>
                         </div>
                     </div>
                     <div class="text-base space-y-6">
@@ -76,15 +89,18 @@
                         <p class="border-b pb-2 text-sm"><strong>Contato:</strong> <span id="view-contato" class="ml-2"></span></p>
                         <p class="border-b pb-2 text-sm"><strong>Equipamento:</strong> <span id="view-equipamento" class="ml-2"></span></p>
                         <div>
-                            <p class="font-bold mb-1 text-sm underline">Descrição do Serviço:</p>
-                            <div id="view-descricao" class="p-3 bg-gray-50 rounded min-h-[100px] whitespace-pre-wrap text-sm italic"></div>
+                            <p class="font-bold mb-1 text-sm underline uppercase">Descrição Técnica / Observações:</p>
+                            <div id="view-descricao" class="p-4 bg-gray-50 rounded min-h-[120px] whitespace-pre-wrap text-sm italic leading-relaxed"></div>
                         </div>
-                        <div class="text-right">
-                            <p class="text-2xl font-bold pt-4 text-blue-800">Total: R$ <span id="view-valor"></span></p>
+                        <div class="text-right bg-gray-50 p-4 rounded">
+                            <p class="text-3xl font-black text-blue-900">Total: R$ <span id="view-valor"></span></p>
                         </div>
                     </div>
-                    <div class="mt-20 border-t pt-4 text-center text-xs text-gray-400 no-print">Assinatura do Responsável</div>
-                    <button onclick="window.print()" class="no-print mt-8 bg-green-600 text-white px-6 py-2 rounded-lg font-bold hover:bg-green-700 shadow-md transition w-full md:w-auto text-sm">🖨️ Imprimir OS</button>
+                    <div class="mt-24 border-t border-gray-300 pt-4 text-center text-[10px] text-gray-400 no-print flex justify-around">
+                        <div class="w-40 border-t border-gray-400 pt-1 text-center">Assinatura Cliente</div>
+                        <div class="w-40 border-t border-gray-400 pt-1 text-center">Assinatura Técnico</div>
+                    </div>
+                    <button onclick="window.print()" class="no-print mt-12 bg-green-600 text-white px-8 py-3 rounded-lg font-bold hover:bg-green-700 shadow-lg transition w-full text-sm uppercase tracking-wider">🖨️ Imprimir Ordem de Serviço</button>
                 </div>
             </div>
         </div>
@@ -95,6 +111,9 @@
     const SUPABASE_KEY = 'sb_publishable_M5bgMFw0R1rWLe5nfofFeg_NwLkjbBh'; 
     const supaClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
+    let chartBarras = null;
+    let chartRosca = null;
+
     async function fazerLogin() {
         const email = document.getElementById('login-email').value;
         const password = document.getElementById('login-senha').value;
@@ -102,7 +121,7 @@
             const { error } = await supaClient.auth.signInWithPassword({ email, password });
             if (error) throw error;
             verificarSessao();
-        } catch (err) { alert("Erro: " + err.message); }
+        } catch (err) { alert("Erro de acesso: " + err.message); }
     }
 
     async function verificarSessao() {
@@ -118,7 +137,7 @@
         const idEdicao = document.getElementById('edit-id').value;
         const btn = document.getElementById('btn-salvar');
         const nome = document.getElementById('cliente').value;
-        if (!nome) return alert("Cliente obrigatório!");
+        if (!nome) return alert("Nome do cliente é obrigatório!");
 
         const dados = {
             cliente: nome,
@@ -130,21 +149,17 @@
         };
 
         try {
-            btn.innerText = "Processando...";
             btn.disabled = true;
+            btn.innerText = "Processando...";
             if (idEdicao) {
-                const { error } = await supaClient.from('ordens_de_servico').update(dados).eq('id', idEdicao);
-                if (error) throw error;
-                alert("Atualizado!");
+                await supaClient.from('ordens_de_servico').update(dados).eq('id', idEdicao);
             } else {
                 dados.numero_os = 'OS-' + Math.floor(1000 + Math.random() * 9000);
-                const { error } = await supaClient.from('ordens_de_servico').insert([dados]);
-                if (error) throw error;
-                alert("Salvo!");
+                await supaClient.from('ordens_de_servico').insert([dados]);
             }
             cancelarEdicao(); carregarOrdens();
-        } catch (err) { alert("Erro: " + err.message); } 
-        finally { btn.disabled = false; btn.innerText = idEdicao ? "Atualizar Dados" : "Salvar na Nuvem"; }
+        } catch (err) { alert("Erro ao salvar: " + err.message); } 
+        finally { btn.disabled = false; btn.innerText = "Salvar na Nuvem"; }
     }
 
     async function carregarOrdens() {
@@ -152,13 +167,16 @@
             const { data, error } = await supaClient.from('ordens_de_servico').select('*').order('created_at', { ascending: false });
             if (error) throw error;
             window.minhasOrdens = data; 
+            
+            atualizarGraficos(data); // Atualiza o dashboard
+
             const lista = document.getElementById('lista-os');
             lista.innerHTML = data.map(os => {
                 let cor = "text-yellow-600";
                 if(os.status === "Em Andamento") cor = "text-blue-600";
                 if(os.status === "Concluído") cor = "text-green-600";
                 return `
-                    <li class="p-2 border rounded hover:bg-blue-50 cursor-pointer flex justify-between items-center group" onclick='verOSDoBanco(${os.id})'>
+                    <li class="p-2 border rounded hover:bg-blue-50 cursor-pointer flex justify-between items-center group transition" onclick='verOSDoBanco(${os.id})'>
                         <div class="flex flex-col text-left">
                             <div class="flex items-center gap-2">
                                 <span class="font-bold text-blue-700 text-[10px]">${os.numero_os}</span>
@@ -174,6 +192,38 @@
                 `;
             }).join('');
         } catch (err) { console.error(err); }
+    }
+
+    // LÓGICA DO DASHBOARD
+    function atualizarGraficos(dados) {
+        const contagem = { 'Pendente': 0, 'Em Andamento': 0, 'Concluído': 0 };
+        dados.forEach(os => { if(contagem[os.status] !== undefined) contagem[os.status]++; else contagem['Pendente']++; });
+
+        const labels = Object.keys(contagem);
+        const valores = Object.values(contagem);
+        const cores = ['#ca8a04', '#2563eb', '#16a34a']; // Amarelo, Azul, Verde
+
+        // Gráfico de Barras
+        if (chartBarras) chartBarras.destroy();
+        chartBarras = new Chart(document.getElementById('graficoBarras'), {
+            type: 'bar',
+            data: {
+                labels: labels,
+                datasets: [{ label: 'Qtd de OS', data: valores, backgroundColor: cores }]
+            },
+            options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } } }
+        });
+
+        // Gráfico de Rosca
+        if (chartRosca) chartRosca.destroy();
+        chartRosca = new Chart(document.getElementById('graficoRosca'), {
+            type: 'doughnut',
+            data: {
+                labels: labels,
+                datasets: [{ data: valores, backgroundColor: cores }]
+            },
+            options: { responsive: true, maintainAspectRatio: false }
+        });
     }
 
     function clicarEditar(id) {
@@ -216,25 +266,26 @@
     function verOS(os) {
         document.getElementById('view-numero').innerText = os.numero_os;
         document.getElementById('view-cliente').innerText = os.cliente;
-        document.getElementById('view-contato').innerText = os.contato || 'N/A';
+        document.getElementById('view-contato').innerText = os.contato || 'Não informado';
         document.getElementById('view-equipamento').innerText = os.equipamento;
         document.getElementById('view-descricao').innerText = os.descricao;
         document.getElementById('view-valor').innerText = Number(os.valor).toLocaleString('pt-BR', { minimumFractionDigits: 2 });
-        document.getElementById('view-status').innerText = os.status || 'Pendente';
+        document.getElementById('view-status').innerText = (os.status || 'Pendente').toUpperCase();
         
         let corStatus = "text-yellow-600";
         if(os.status === "Em Andamento") corStatus = "text-blue-600";
         if(os.status === "Concluído") corStatus = "text-green-600";
-        document.getElementById('view-status').className = corStatus;
+        document.getElementById('view-status').className = "text-xs font-black " + corStatus;
 
         const campoData = document.getElementById('view-data');
-        if (campoData && os.created_at) campoData.innerText = new Date(os.created_at).toLocaleDateString('pt-BR');
+        if (campoData && os.created_at) campoData.innerText = new Date(os.created_at).toLocaleDateString('pt-BR') + ' ' + new Date(os.created_at).toLocaleTimeString('pt-BR', {hour: '2-digit', minute:'2-digit'});
         
         document.getElementById('area-os').classList.remove('hidden');
+        window.scrollTo({ top: 0, behavior: 'smooth' });
     }
 
     async function excluirOS(id) {
-        if(confirm("Excluir permanentemente?")) {
+        if(confirm("Confirmar exclusão permanente desta Ordem de Serviço?")) {
             await supaClient.from('ordens_de_servico').delete().eq('id', id);
             carregarOrdens();
             document.getElementById('area-os').classList.add('hidden');

@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Smart OS Cloud - V5.1 Pro Analytics</title>
+    <title>Smart OS Cloud - V5.2 Final</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
@@ -28,7 +28,12 @@
         
         <div class="flex justify-between items-center mb-6 no-print max-w-6xl mx-auto">
             <div>
-                <h1 class="text-2xl font-black text-slate-800 tracking-tighter uppercase italic">Smart OS <span class="text-blue-600">Cloud</span></h1>
+                <a href="javascript:location.reload();" class="block group">
+                    <h1 class="text-2xl font-black text-slate-800 tracking-tighter uppercase italic group-hover:text-blue-600 transition-colors cursor-pointer">
+                        Smart OS <span class="text-blue-600 group-hover:text-slate-800">Cloud</span>
+                    </h1>
+                    <p class="text-[9px] font-bold text-slate-400 uppercase tracking-[0.2em] group-hover:text-blue-400 transition-colors">Painel de Controle ↻</p>
+                </a>
             </div>
             <div class="flex gap-2">
                 <button onclick="alternarVisaoClientes()" class="bg-white border border-slate-300 text-slate-600 px-4 py-2 rounded-lg text-xs font-bold hover:bg-slate-50 transition shadow-sm">
@@ -53,7 +58,7 @@
                 </div>
             </div>
 
-            <div id="sessao-clientes" class="hidden mb-8 no-print">
+            <div id="sessao-clientes" class="hidden mb-8 no-print animate-in fade-in duration-300">
                 <div class="bg-white p-6 rounded-xl shadow-md border-t-4 border-emerald-500">
                     <div class="flex justify-between items-center mb-4">
                         <h2 class="font-black text-slate-800 uppercase text-sm italic">Base de Dados de Clientes</h2>
@@ -132,6 +137,7 @@
 
     let chartBarras = null, chartRosca = null, listaClientesGlobal = [], minhasOrdens = [];
 
+    // LOGIN
     async function fazerLogin() {
         const email = document.getElementById('login-email').value;
         const password = document.getElementById('login-senha').value;
@@ -159,6 +165,7 @@
 
     function fazerLogout() { supaClient.auth.signOut().then(() => window.location.reload()); }
 
+    // DADOS
     async function carregarClientes() {
         const { data } = await supaClient.from('clientes').select('*').order('nome');
         if (data) {
@@ -194,13 +201,11 @@
     function atualizarGraficos(dados) {
         const cont = { 'Pendente': 0, 'Em Andamento': 0, 'Concluído': 0 };
         dados.forEach(os => { if(cont[os.status] !== undefined) cont[os.status]++; });
-        
         const total = dados.length || 1;
         const cores = ['#f59e0b', '#3b82f6', '#10b981'];
         const labels = Object.keys(cont);
         const valores = Object.values(cont);
 
-        // ATUALIZA A LEGENDA TEXTUAL ABAIXO DO GRÁFICO
         document.getElementById('legenda-percentual').innerHTML = labels.map((l, i) => {
             const perc = ((valores[i] / total) * 100).toFixed(0);
             const corIcone = l === 'Pendente' ? '🟡' : (l === 'Em Andamento' ? '🔵' : '🟢');
@@ -215,29 +220,18 @@
 
         if (chartRosca) chartRosca.destroy();
         chartRosca = new Chart(document.getElementById('graficoRosca'), {
-            type: 'doughnut', 
-            data: { labels: labels, datasets: [{ data: valores, backgroundColor: cores }] },
+            type: 'doughnut', data: { labels: labels, datasets: [{ data: valores, backgroundColor: cores }] },
             options: { 
-                responsive: true, 
-                maintainAspectRatio: false, 
-                cutout: '80%', 
+                responsive: true, maintainAspectRatio: false, cutout: '80%', 
                 plugins: { 
                     legend: { display: false },
-                    tooltip: {
-                        callbacks: {
-                            label: function(context) {
-                                const val = context.raw;
-                                const perc = ((val / total) * 100).toFixed(1);
-                                return ` ${context.label}: ${val} (${perc}%)`;
-                            }
-                        }
-                    }
+                    tooltip: { callbacks: { label: (ctx) => ` ${ctx.label}: ${ctx.raw} (${((ctx.raw/total)*100).toFixed(1)}%)` } }
                 } 
             }
         });
     }
 
-    // --- RESTANTE DAS FUNÇÕES ---
+    // AÇÕES
     async function salvarNoSupabase() {
         const idEdicao = document.getElementById('edit-id').value;
         const nomeCliente = document.getElementById('cliente').value;
@@ -301,8 +295,7 @@
 
     function filtrarOSPorCliente(nome) {
         const filtradas = minhasOrdens.filter(os => os.cliente.toLowerCase() === nome.toLowerCase());
-        atualizarGraficos(filtradas);
-        renderizarListaOS(filtradas);
+        atualizarGraficos(filtradas); renderizarListaOS(filtradas);
         document.getElementById('sessao-clientes').classList.add('hidden');
     }
 

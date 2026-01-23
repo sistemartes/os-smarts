@@ -3,321 +3,187 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Smart OS Cloud - V5.3 Pie Chart Edition</title>
+    <title>Smart OS Cloud - Gestão de Ordens de Serviço</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700;900&display=swap" rel="stylesheet">
     <style>
-        @media print { .no-print { display: none !important; } body { background: white; } }
-        .custom-scroll::-webkit-scrollbar { width: 5px; }
+        body { font-family: 'Inter', sans-serif; }
+        @media print {
+            .no-print { display: none !important; }
+            .print-only { display: block !important; }
+            body { background: white; }
+            .os-card { border: none !important; box-shadow: none !important; width: 100%; margin: 0; padding: 0; }
+        }
+        .custom-scroll::-webkit-scrollbar { width: 6px; }
+        .custom-scroll::-webkit-scrollbar-track { background: #f1f1f1; }
         .custom-scroll::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
+        .bg-pattern { background-color: #f8fafc; background-image: radial-gradient(#e2e8f0 0.5px, transparent 0.5px); background-size: 12px 12px; }
     </style>
 </head>
-<body class="bg-slate-100 p-4 font-sans text-slate-800">
+<body class="bg-pattern min-h-screen">
 
-    <div id="tela-login" class="fixed inset-0 bg-slate-900 flex items-center justify-center z-[100]">
-        <div class="bg-white p-8 rounded-2xl shadow-2xl w-96 text-center border-t-8 border-blue-600">
-            <h2 class="text-3xl font-black mb-6 text-slate-800 tracking-tighter uppercase italic">Acesso OS</h2>
-            <input type="email" id="login-email" placeholder="E-mail" class="w-full border p-3 mb-4 rounded-lg outline-none focus:ring-2 focus:ring-blue-500 bg-slate-50">
-            <input type="password" id="login-senha" placeholder="Senha" class="w-full border p-3 mb-6 rounded-lg outline-none focus:ring-2 focus:ring-blue-500 bg-slate-50">
-            <button onclick="fazerLogin()" class="w-full bg-blue-600 text-white font-bold py-3 rounded-lg hover:bg-blue-700 shadow-lg transition-all active:scale-95">Entrar no Sistema</button>
-        </div>
-    </div>
-
-    <div id="conteudo-sistema" class="hidden">
-        
-        <div class="flex justify-between items-center mb-6 no-print max-w-6xl mx-auto">
-            <div>
-                <a href="javascript:location.reload();" class="block group">
-                    <h1 class="text-2xl font-black text-slate-800 tracking-tighter uppercase italic group-hover:text-blue-600 transition-colors cursor-pointer">
-                        Smart OS <span class="text-blue-600 group-hover:text-slate-800">Cloud</span>
+    <nav class="bg-white border-b border-slate-200 sticky top-0 z-50 no-print">
+        <div class="max-w-7xl mx-auto px-4 h-20 flex items-center justify-between">
+            <div class="flex items-center gap-4">
+                <img id="logo-sistema" src="" alt="Logo" class="h-12 w-auto object-contain">
+                <div>
+                    <h1 class="text-2xl font-black text-slate-800 tracking-tighter uppercase italic">
+                        Smart OS <span class="text-blue-600">Cloud</span>
                     </h1>
-                    <p class="text-[9px] font-bold text-slate-400 uppercase tracking-[0.2em] group-hover:text-blue-400 transition-colors">Painel de Controle ↻</p>
-                </a>
+                    <p class="text-[9px] font-bold text-slate-400 uppercase tracking-[0.2em]">Painel de Controle</p>
+                </div>
             </div>
-            <div class="flex gap-2">
-                <button onclick="alternarVisaoClientes()" class="bg-white border border-slate-300 text-slate-600 px-4 py-2 rounded-lg text-xs font-bold hover:bg-slate-50 transition shadow-sm">
-                    👥 <span id="btn-cliente-texto">Gerenciar Clientes</span>
-                </button>
-                <button onclick="fazerLogout()" class="bg-red-50 text-red-500 px-4 py-2 rounded-lg text-xs font-bold hover:bg-red-100 shadow-sm">Sair</button>
+            <button onclick="document.getElementById('modal-os').classList.remove('hidden')" 
+                    class="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-xl font-bold transition-all shadow-lg shadow-blue-200 flex items-center gap-2 uppercase text-xs tracking-widest">
+                <span>+ Nova Ordem</span>
+            </button>
+        </div>
+    </nav>
+
+    <main class="max-w-7xl mx-auto px-4 py-8 no-print">
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-10">
+            <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm">
+                <p class="text-slate-500 text-xs font-bold uppercase tracking-wider mb-1">Total de Serviços</p>
+                <h3 class="text-4xl font-black text-slate-800" id="stats-total">0</h3>
+            </div>
+            <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm border-l-4 border-l-amber-400">
+                <p class="text-slate-500 text-xs font-bold uppercase tracking-wider mb-1">Em Aberto</p>
+                <h3 class="text-4xl font-black text-slate-800" id="stats-aberto">0</h3>
+            </div>
+            <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm border-l-4 border-l-emerald-500">
+                <p class="text-slate-500 text-xs font-bold uppercase tracking-wider mb-1">Concluídas</p>
+                <h3 class="text-4xl font-black text-slate-800" id="stats-concluido">0</h3>
             </div>
         </div>
 
-        <div class="container mx-auto max-w-6xl">
-            <div id="sessao-dashboard" class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8 no-print">
-                <div class="bg-white p-6 rounded-xl shadow-sm border border-slate-200 h-64 flex flex-col items-center">
-                    <h3 class="text-[10px] font-black text-slate-400 mb-4 uppercase tracking-widest">Volume de Ordens</h3>
-                    <canvas id="graficoBarras"></canvas>
-                </div>
-                <div class="bg-white p-6 rounded-xl shadow-sm border border-slate-200 h-64 flex flex-col items-center">
-                    <h3 class="text-[10px] font-black text-slate-400 mb-2 uppercase tracking-widest">Distribuição (%)</h3>
-                    <div class="relative w-full h-32">
-                        <canvas id="graficoPizza"></canvas>
-                    </div>
-                    <div id="legenda-percentual" class="mt-8 text-[10px] font-black text-slate-500 flex gap-4 uppercase tracking-tighter"></div>
-                </div>
+        <div class="bg-white rounded-3xl border border-slate-200 shadow-xl overflow-hidden">
+            <div class="p-6 border-b border-slate-100 flex justify-between items-center bg-slate-50/50">
+                <h2 class="font-black text-slate-800 uppercase tracking-tighter italic">Gerenciamento de Ordens</h2>
+                <input type="text" id="busca" placeholder="Buscar cliente ou equipamento..." 
+                       class="bg-white border border-slate-200 px-4 py-2 rounded-lg text-sm w-64 focus:ring-2 focus:ring-blue-500 outline-none">
             </div>
-
-            <div id="sessao-clientes" class="hidden mb-8 no-print animate-in fade-in duration-300">
-                <div class="bg-white p-6 rounded-xl shadow-md border-t-4 border-emerald-500">
-                    <div class="flex justify-between items-center mb-4">
-                        <h2 class="font-black text-slate-800 uppercase text-sm italic">Base de Dados de Clientes</h2>
-                        <input type="text" id="busca-cliente" onkeyup="filtrarTabelaClientes()" placeholder="Filtrar cliente..." class="border p-2 rounded-lg text-xs w-64 outline-none focus:ring-1 focus:ring-emerald-500">
-                    </div>
-                    <div class="overflow-x-auto max-h-64 custom-scroll">
-                        <table class="w-full text-left text-xs">
-                            <thead class="bg-slate-50 text-slate-500 uppercase font-bold sticky top-0">
-                                <tr><th class="p-3">Nome</th><th class="p-3">Contato</th><th class="p-3">E-mail</th><th class="p-3 text-center">Ações</th></tr>
-                            </thead>
-                            <tbody id="tabela-clientes-corpo" class="divide-y divide-slate-100"></tbody>
-                        </table>
-                    </div>
-                </div>
+            <div class="overflow-x-auto">
+                <table class="w-full text-left">
+                    <thead>
+                        <tr class="bg-slate-50 text-slate-400 text-[10px] font-black uppercase tracking-[0.15em]">
+                            <th class="px-8 py-4">ID</th>
+                            <th class="px-8 py-4">Cliente / Contato</th>
+                            <th class="px-8 py-4">Equipamento</th>
+                            <th class="px-8 py-4">Status</th>
+                            <th class="px-8 py-4 text-right">Ações</th>
+                        </tr>
+                    </thead>
+                    <tbody id="lista-os" class="divide-y divide-slate-100 text-sm"></tbody>
+                </table>
             </div>
+        </div>
+    </main>
 
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-                <div class="md:col-span-1 no-print">
-                    <div class="bg-white p-6 rounded-xl shadow-md border-t-4 border-blue-600" id="form-container">
-                        <h2 id="titulo-form" class="text-xs font-black mb-5 text-blue-600 uppercase tracking-widest">Nova Ordem de Serviço</h2>
-                        <div class="space-y-3">
-                            <input type="hidden" id="edit-id">
-                            <input type="text" id="cliente" list="lista-clientes-sugestao" oninput="checarClienteExistente(this.value)" placeholder="Nome do Cliente" autocomplete="off" class="w-full border p-2.5 rounded-lg text-sm bg-slate-50 font-bold outline-none focus:border-blue-500">
-                            <datalist id="lista-clientes-sugestao"></datalist>
-                            <input type="text" id="contato" placeholder="WhatsApp" autocomplete="off" class="w-full border p-2.5 rounded-lg text-sm bg-slate-50 outline-none">
-                            <input type="email" id="email" placeholder="E-mail" autocomplete="off" class="w-full border p-2.5 rounded-lg text-sm bg-slate-50 outline-none">
-                            <input type="text" id="endereco" placeholder="Endereço" autocomplete="off" class="w-full border p-2.5 rounded-lg text-sm bg-slate-50 outline-none">
-                            <hr class="my-2">
-                            <input type="text" id="equipamento" placeholder="Equipamento" class="w-full border p-2.5 rounded-lg text-sm outline-none">
-                            <textarea id="descricao" placeholder="Defeito/Serviço" class="w-full border p-2.5 rounded-lg text-sm h-24 outline-none resize-none"></textarea>
-                            <div class="grid grid-cols-2 gap-2">
-                                <input type="number" id="valor" placeholder="R$ 0,00" class="w-full border p-2.5 rounded-lg text-sm font-bold outline-none">
-                                <select id="status" class="w-full border p-2.5 rounded-lg text-sm font-black outline-none bg-white">
-                                    <option value="Pendente">🟡 Pendente</option>
-                                    <option value="Em Andamento">🔵 Em Andamento</option>
-                                    <option value="Concluído">🟢 Concluído</option>
-                                </select>
-                            </div>
-                            <button onclick="salvarNoSupabase()" id="btn-salvar" class="w-full bg-blue-600 text-white font-black py-3 rounded-lg hover:bg-blue-700 shadow-lg uppercase text-xs">Salvar Registro</button>
-                            <button id="btn-cancelar" onclick="cancelarEdicao()" class="w-full bg-slate-400 text-white font-bold py-2 rounded-lg hidden text-[10px] uppercase">Cancelar Edição</button>
-                        </div>
+    <div id="view-os" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm hidden z-[60] flex items-center justify-center p-4 no-print">
+        <div class="bg-white w-full max-w-4xl max-h-[90vh] rounded-3xl shadow-2xl overflow-hidden flex flex-col">
+            <div class="p-4 bg-slate-100 border-b flex justify-between no-print">
+                <button onclick="fecharView()" class="text-slate-500 font-bold px-4">← Voltar</button>
+                <button onclick="window.print()" class="bg-slate-800 text-white px-6 py-2 rounded-lg font-bold">Imprimir OS</button>
+            </div>
+            <div id="print-area" class="p-12 overflow-y-auto custom-scroll bg-white text-slate-800">
+                <div class="flex justify-between border-b-4 border-slate-800 pb-8 mb-10 items-center">
+                    <div class="flex items-center gap-6">
+                        <img id="logo-impressao" src="" alt="Logo" class="h-20 w-auto object-contain">
+                        <h1 class="text-4xl font-black uppercase italic tracking-tighter">Ordem de<br>Serviço</h1>
                     </div>
-                    <div class="bg-white p-5 rounded-xl shadow-md mt-6 border-b-4 border-slate-300">
-                        <input type="text" id="busca" onkeyup="filtrarOrdens()" placeholder="Buscar OS..." class="w-full border p-2 rounded-lg text-xs mb-4 outline-none bg-slate-50">
-                        <ul id="lista-os" class="space-y-2 text-sm max-h-60 overflow-y-auto custom-scroll"></ul>
+                    <div class="text-right">
+                        <p class="font-black text-3xl text-slate-800" id="view-numero"></p>
+                        <p class="text-[10px] text-slate-400 font-bold uppercase" id="view-data"></p>
+                        <div class="mt-2 px-3 py-1 rounded-full text-[10px] font-black border-2" id="view-status-tag"><span id="view-status"></span></div>
                     </div>
                 </div>
 
-                <div class="md:col-span-2">
-                    <div id="area-os" class="bg-white p-12 rounded-xl shadow-2xl hidden min-h-[700px] border border-slate-100">
-                        <div class="flex justify-between border-b-4 border-slate-800 pb-8 mb-10">
-                            <div><h1 class="text-4xl font-black uppercase italic tracking-tighter">Ordem de Serviço</h1></div>
-                            <div class="text-right">
-                                <p class="font-black text-3xl text-slate-800" id="view-numero"></p>
-                                <p class="text-[10px] text-slate-400 font-bold uppercase" id="view-data"></p>
-                                <div class="mt-2 px-3 py-1 rounded-full text-[10px] font-black border-2" id="view-status-tag"><span id="view-status"></span></div>
-                            </div>
-                        </div>
-                        <div class="grid grid-cols-2 gap-10 mb-10">
-                            <div><p class="text-[10px] font-black text-slate-300">CLIENTE</p><p id="view-cliente" class="text-xl font-black uppercase"></p><p id="view-contato" class="text-sm text-slate-500"></p><p id="view-email" class="text-[10px] text-slate-400"></p></div>
-                            <div><p class="text-[10px] font-black text-slate-300">EQUIPAMENTO</p><p id="view-equipamento" class="text-xl font-black uppercase text-blue-900"></p></div>
-                        </div>
-                        <div class="bg-slate-50 p-8 rounded-2xl mb-10 min-h-[200px] italic text-sm text-slate-700" id="view-descricao"></div>
-                        <div class="flex justify-end"><div class="bg-slate-900 text-white px-10 py-6 rounded-2xl shadow-xl text-right"><p class="text-4xl font-black text-white">R$ <span id="view-valor"></span></p></div></div>
-                        <button onclick="window.print()" class="no-print mt-12 bg-blue-600 text-white px-12 py-4 rounded-xl font-black w-full text-xs uppercase tracking-widest">Imprimir OS</button>
+                <div class="grid grid-cols-2 gap-12 mb-10">
+                    <div>
+                        <h4 class="text-[10px] font-black text-blue-600 uppercase tracking-[0.2em] mb-3">Dados do Cliente</h4>
+                        <p class="text-xl font-bold" id="view-cliente"></p>
+                        <p class="text-slate-500" id="view-telefone"></p>
+                    </div>
+                    <div>
+                        <h4 class="text-[10px] font-black text-blue-600 uppercase tracking-[0.2em] mb-3">Informações Técnicas</h4>
+                        <p class="text-lg font-bold" id="view-equipamento"></p>
+                        <p class="text-slate-500 text-sm">Nº de Série: <span id="view-serie" class="font-mono"></span></p>
+                    </div>
+                </div>
+
+                <div class="space-y-8">
+                    <div class="bg-slate-50 p-6 rounded-2xl">
+                        <h4 class="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] mb-2">Relato do Problema</h4>
+                        <p id="view-problema" class="text-slate-700 leading-relaxed italic"></p>
+                    </div>
+                    <div class="border-2 border-slate-100 p-6 rounded-2xl">
+                        <h4 class="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] mb-2">Parecer Técnico / Solução</h4>
+                        <p id="view-solucao" class="text-slate-700 leading-relaxed min-h-[80px]"></p>
+                    </div>
+                </div>
+
+                <div class="mt-16 pt-8 border-t border-slate-100 flex justify-between items-end">
+                    <div class="w-64 border-t border-slate-300 text-center pt-2">
+                        <p class="text-[10px] font-bold uppercase text-slate-400 italic">Assinatura do Técnico</p>
+                    </div>
+                    <div class="w-64 border-t border-slate-300 text-center pt-2">
+                        <p class="text-[10px] font-bold uppercase text-slate-400 italic">Assinatura do Cliente</p>
                     </div>
                 </div>
             </div>
         </div>
     </div>
 
-<script>
-    const SUPABASE_URL = 'https://awuuucqzhgmyuolqrifm.supabase.co';
-    const SUPABASE_KEY = 'sb_publishable_M5bgMFw0R1rWLe5nfofFeg_NwLkjbBh'; 
-    const supaClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+    <div id="modal-os" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm hidden z-[70] flex items-center justify-center p-4">
+        <div class="bg-white w-full max-w-2xl rounded-3xl shadow-2xl overflow-hidden">
+            <div class="px-8 py-6 border-b border-slate-100 bg-slate-50/50 flex justify-between items-center">
+                <h3 class="text-xl font-black text-slate-800 uppercase italic tracking-tighter">Ficha de Atendimento</h3>
+                <button onclick="fecharModal()" class="text-slate-400 hover:text-slate-600 font-bold">X</button>
+            </div>
+            <form id="os-form" class="p-8 grid grid-cols-2 gap-5">
+                <input type="hidden" id="edit-id">
+                <div class="col-span-2">
+                    <label class="block text-[10px] font-black uppercase text-slate-400 mb-1">Nome do Cliente</label>
+                    <input type="text" id="cliente" required class="w-full border border-slate-200 px-4 py-3 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none transition-all">
+                </div>
+                <div>
+                    <label class="block text-[10px] font-black uppercase text-slate-400 mb-1">Telefone</label>
+                    <input type="text" id="telefone" required class="w-full border border-slate-200 px-4 py-3 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none transition-all">
+                </div>
+                <div>
+                    <label class="block text-[10px] font-black uppercase text-slate-400 mb-1">Equipamento</label>
+                    <input type="text" id="equipamento" required class="w-full border border-slate-200 px-4 py-3 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none transition-all">
+                </div>
+                <div>
+                    <label class="block text-[10px] font-black uppercase text-slate-400 mb-1">Número de Série</label>
+                    <input type="text" id="serie" class="w-full border border-slate-200 px-4 py-3 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none transition-all">
+                </div>
+                <div>
+                    <label class="block text-[10px] font-black uppercase text-slate-400 mb-1">Status Inicial</label>
+                    <select id="status" class="w-full border border-slate-200 px-4 py-3 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none transition-all font-bold text-slate-700">
+                        <option value="Aberto">🟠 Em Aberto</option>
+                        <option value="Em Andamento">🔵 Em Andamento</option>
+                        <option value="Concluído">🟢 Concluído</option>
+                        <option value="Cancelado">🔴 Cancelado</option>
+                    </select>
+                </div>
+                <div class="col-span-2">
+                    <label class="block text-[10px] font-black uppercase text-slate-400 mb-1">Descrição do Problema</label>
+                    <textarea id="problema" rows="3" class="w-full border border-slate-200 px-4 py-2 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none transition-all"></textarea>
+                </div>
+                <div class="col-span-2">
+                    <label class="block text-[10px] font-black uppercase text-slate-400 mb-1">Laudo Técnico / Solução</label>
+                    <textarea id="solucao" rows="3" class="w-full border border-slate-200 px-4 py-2 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none transition-all bg-blue-50/30"></textarea>
+                </div>
+                <div class="col-span-2 pt-4">
+                    <button type="submit" class="w-full bg-slate-800 hover:bg-black text-white py-4 rounded-2xl font-black uppercase tracking-widest transition-all shadow-lg">Salvar Ordem de Serviço</button>
+                </div>
+            </form>
+        </div>
+    </div>
 
-    let chartBarras = null, chartPizza = null, listaClientesGlobal = [], minhasOrdens = [];
-
-    // LOGIN
-    async function fazerLogin() {
-        const email = document.getElementById('login-email').value;
-        const password = document.getElementById('login-senha').value;
-        const btn = document.querySelector('#tela-login button');
-        try {
-            btn.innerText = "Verificando...";
-            const { error } = await supaClient.auth.signInWithPassword({ email, password });
-            if (error) throw error;
-            verificarSessao();
-        } catch (err) { alert("Acesso Negado."); btn.innerText = "Entrar no Sistema"; }
-    }
-
-    async function verificarSessao() {
-        const { data: { session } } = await supaClient.auth.getSession();
-        if (session) { 
-            document.getElementById('tela-login').classList.add('hidden'); 
-            document.getElementById('conteudo-sistema').classList.remove('hidden');
-            await carregarClientes(); 
-            await carregarOrdens(); 
-        } else { 
-            document.getElementById('tela-login').classList.remove('hidden'); 
-            document.getElementById('conteudo-sistema').classList.add('hidden');
-        }
-    }
-
-    function fazerLogout() { supaClient.auth.signOut().then(() => window.location.reload()); }
-
-    // DADOS
-    async function carregarClientes() {
-        const { data } = await supaClient.from('clientes').select('*').order('nome');
-        if (data) {
-            listaClientesGlobal = data;
-            document.getElementById('lista-clientes-sugestao').innerHTML = data.map(c => `<option value="${c.nome}">`).join('');
-            atualizarTabelaClientes(data);
-        }
-    }
-
-    function atualizarTabelaClientes(dados) {
-        const corpo = document.getElementById('tabela-clientes-corpo');
-        corpo.innerHTML = dados.map(c => `
-            <tr class="hover:bg-slate-50">
-                <td class="p-3 font-bold text-blue-700 uppercase">${c.nome}</td>
-                <td class="p-3">${c.contato || '-'}</td>
-                <td class="p-3">${c.email || '-'}</td>
-                <td class="p-3 text-center flex justify-center gap-2">
-                    <button onclick="filtrarOSPorCliente('${c.nome}')" title="Ver Histórico">🔍</button>
-                    <button onclick="prepararEdicaoCliente('${c.nome}')" title="Editar">✏️</button>
-                </td>
-            </tr>`).join('');
-    }
-
-    async function carregarOrdens() {
-        const { data } = await supaClient.from('ordens_de_servico').select('*').order('created_at', { ascending: false });
-        if (data) {
-            minhasOrdens = data;
-            renderizarListaOS(data);
-            atualizarGraficos(data);
-        }
-    }
-
-    function atualizarGraficos(dados) {
-        const cont = { 'Pendente': 0, 'Em Andamento': 0, 'Concluído': 0 };
-        dados.forEach(os => { if(cont[os.status] !== undefined) cont[os.status]++; });
-        const total = dados.length || 1;
-        const cores = ['#f59e0b', '#3b82f6', '#10b981'];
-        const labels = Object.keys(cont);
-        const valores = Object.values(cont);
-
-        document.getElementById('legenda-percentual').innerHTML = labels.map((l, i) => {
-            const perc = ((valores[i] / total) * 100).toFixed(0);
-            const corIcone = l === 'Pendente' ? '🟡' : (l === 'Em Andamento' ? '🔵' : '🟢');
-            return `<span>${corIcone} ${perc}%</span>`;
-        }).join('');
-
-        if (chartBarras) chartBarras.destroy();
-        chartBarras = new Chart(document.getElementById('graficoBarras'), {
-            type: 'bar', data: { labels: labels, datasets: [{ data: valores, backgroundColor: cores, borderRadius: 5 }] },
-            options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } } }
-        });
-
-        if (chartPizza) chartPizza.destroy();
-        chartPizza = new Chart(document.getElementById('graficoPizza'), {
-            type: 'pie', // MUDADO PARA PIZZA
-            data: { labels: labels, datasets: [{ data: valores, backgroundColor: cores }] },
-            options: { 
-                responsive: true, maintainAspectRatio: false, 
-                plugins: { 
-                    legend: { display: false },
-                    tooltip: { callbacks: { label: (ctx) => ` ${ctx.label}: ${ctx.raw} (${((ctx.raw/total)*100).toFixed(1)}%)` } }
-                } 
-            }
-        });
-    }
-
-    // AÇÕES RESTANTES...
-    async function salvarNoSupabase() {
-        const idEdicao = document.getElementById('edit-id').value;
-        const nomeCliente = document.getElementById('cliente').value;
-        if (!nomeCliente) return alert("Informe o cliente!");
-        try {
-            let cli = listaClientesGlobal.find(c => c.nome.toLowerCase() === nomeCliente.toLowerCase());
-            let idCli = cli ? cli.id : null;
-            const dadosCli = { nome: nomeCliente, contato: document.getElementById('contato').value, email: document.getElementById('email').value, endereco: document.getElementById('endereco').value };
-            if (!idCli) { const { data: nCli } = await supaClient.from('clientes').insert([dadosCli]).select(); idCli = nCli[0].id; }
-            else { await supaClient.from('clientes').update(dadosCli).eq('id', idCli); }
-            const dadosOS = { id_cliente: idCli, cliente: nomeCliente, contato: dadosCli.contato, equipamento: document.getElementById('equipamento').value, descricao: document.getElementById('descricao').value, valor: parseFloat(document.getElementById('valor').value) || 0, status: document.getElementById('status').value };
-            if (idEdicao) { await supaClient.from('ordens_de_servico').update(dadosOS).eq('id', idEdicao); } 
-            else { dadosOS.numero_os = 'OS-' + Math.floor(1000 + Math.random() * 9000); await supaClient.from('ordens_de_servico').insert([dadosOS]); }
-            cancelarEdicao(); await carregarClientes(); await carregarOrdens();
-        } catch (err) { alert("Erro ao salvar."); }
-    }
-
-    function renderizarListaOS(dados) {
-        document.getElementById('lista-os').innerHTML = dados.map(os => `
-            <li class="p-3 border rounded-xl mb-2 cursor-pointer bg-white flex justify-between items-center shadow-sm" onclick='verOSDoBanco(${os.id})'>
-                <div class="text-left"><span class="text-[8px] font-black uppercase text-blue-500">● ${os.status}</span><br><span class="font-bold text-xs uppercase">${os.cliente}</span></div>
-                <button onclick="event.stopPropagation(); clicarEditar(${os.id})" class="text-amber-500">✏️</button>
-            </li>`).join('');
-    }
-
-    function verOSDoBanco(id) {
-        const os = minhasOrdens.find(i => i.id === id);
-        if (os) {
-            document.getElementById('area-os').classList.remove('hidden');
-            document.getElementById('view-numero').innerText = os.numero_os;
-            document.getElementById('view-cliente').innerText = os.cliente;
-            document.getElementById('view-contato').innerText = os.contato || 'N/A';
-            document.getElementById('view-equipamento').innerText = os.equipamento;
-            document.getElementById('view-descricao').innerText = os.descricao;
-            document.getElementById('view-valor').innerText = Number(os.valor).toLocaleString('pt-BR', { minimumFractionDigits: 2 });
-            document.getElementById('view-status').innerText = os.status.toUpperCase();
-            document.getElementById('view-data').innerText = new Date(os.created_at).toLocaleDateString('pt-BR');
-            const cli = listaClientesGlobal.find(c => c.nome === os.cliente);
-            document.getElementById('view-email').innerText = cli ? cli.email : '';
-            let cor = os.status === "Em Andamento" ? "#3b82f6" : (os.status === "Concluído" ? "#10b981" : "#f59e0b");
-            document.getElementById('view-status-tag').style.borderColor = cor;
-            document.getElementById('view-status-tag').style.color = cor;
-            window.scrollTo({ top: 0, behavior: 'smooth' });
-        }
-    }
-
-    function clicarEditar(id) {
-        const os = minhasOrdens.find(i => i.id === id);
-        if (os) {
-            document.getElementById('edit-id').value = os.id;
-            document.getElementById('cliente').value = os.cliente;
-            checarClienteExistente(os.cliente);
-            document.getElementById('equipamento').value = os.equipamento;
-            document.getElementById('descricao').value = os.descricao;
-            document.getElementById('valor').value = os.valor;
-            document.getElementById('status').value = os.status;
-            document.getElementById('btn-cancelar').classList.remove('hidden');
-            window.scrollTo({ top: 0, behavior: 'smooth' });
-        }
-    }
-
-    function filtrarOSPorCliente(nome) {
-        const filtradas = minhasOrdens.filter(os => os.cliente.toLowerCase() === nome.toLowerCase());
-        atualizarGraficos(filtradas); renderizarListaOS(filtradas);
-        document.getElementById('sessao-clientes').classList.add('hidden');
-    }
-
-    function prepararEdicaoCliente(nome) {
-        const c = listaClientesGlobal.find(cli => cli.nome === nome);
-        if(c) {
-            document.getElementById('cliente').value = c.nome;
-            document.getElementById('contato').value = c.contato;
-            document.getElementById('email').value = c.email;
-            document.getElementById('endereco').value = c.endereco;
-            document.getElementById('sessao-clientes').classList.add('hidden');
-            window.scrollTo({ top: 400, behavior: 'smooth' });
-        }
-    }
-
-    function alternarVisaoClientes() { document.getElementById('sessao-clientes').classList.toggle('hidden'); }
-    function checarClienteExistente(n) { const c = listaClientesGlobal.find(cli => cli.nome.toLowerCase() === n.toLowerCase()); if (c) { document.getElementById('contato').value = c.contato || ''; document.getElementById('email').value = c.email || ''; document.getElementById('endereco').value = c.endereco || ''; } }
-    function filtrarOrdens() { const t = document.getElementById('busca').value.toLowerCase(); renderizarListaOS(minhasOrdens.filter(os => os.cliente.toLowerCase().includes(t))); }
-    function cancelarEdicao() { document.getElementById('edit-id').value = ''; ['cliente','contato','email','endereco','equipamento','descricao','valor'].forEach(id => document.getElementById(id).value = ''); document.getElementById('btn-cancelar').classList.add('hidden'); }
-    
-    verificarSessao();
-</script>
-</body>
-</html>
+    <script>
+        // ==========================================
+        // 1. CONFIGURAÇÃO DO LOGOTIPO (BASE64)
+        // ==========================================
+        const LOGOTIPO_BASE64 = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAfQAAAEoCAYAAACuKgPeAAAQAElEQVR4AeydB5wkRfX4a3Lenc159yIX4ODuOC7BASIcHCdiVkARMaE/RUXR3w8DokjwLwgIKEYU+eEPFVHJQcIRL2cuH3e3d5vT5Dz/96q3d3tme2a6Z6Y3vv50d011Vb336lvd9bqrw+gZTUSACBABIkAEiMCEJ0AOfcI3IVWACBABIkAEiABj2jp0IkwEiAARIAJEgAiMCgFy6KOCmZQQASJABIgAEdCWwER26NqSIelEgAgQASJABCYQAXLoE6ixyFQiQASIABEgApkIkEPPRIa2EwEiQASIABGYQATIoU+gxiJTiQARIAJEgAhkIkAOPRMZbbeTdCJABIgAESACRSVADr2oOEkYESACRIAIEIGxIUAOfWy4a6uVpBMBIkAEiMCUI0AOfco1OVWYCBABIkAEJiMBcuiTsVW1rRNJJwJEgAgQgXFIgBz6OGwUMokIEAEiQASIgFoC5NDVEqP82hIg6USACBABIpAXAXLoeWGjQkSACBABIkAExhcBcujjqz3IGm0JkHQiQASIABKQlQA590jYtVYwIEAEiQASmEgFy6FOptamu2hIg6USACBCBMSRADn0M4ZNqIkAEiAARIALFIkAOvVgkSQ4R0JYASScCRIAIZCVADj0rHkokAkSACBABIjAxCJBDnxjtRFYSAW0JkHQiQAQmPAFy6BO+CakCRIAIEAEiQAQYI4dOewERIAJaEyD5RIAIjAIBcuijAJlUEAEiQASIABHQmgA5dK0Jk3wiQAS0JUDSiQAR4ATIoXMMtCICRIAIEAEiMLEJkEOf2O1H1hMBIqAtAZJOBCYMAXLoE6apyFAiQASIABEgApkJkEPPzIZSiAARIALaEiDpRKCIBMihFxEmiSICRIAIEAEiMFYEyKGPFXnSSwSIABHQlgBJn2IEyKFPsQan6hIBIkAEiMDkJEAOfXK2K9WKCBABIqAtAZI+7giQQx93TUIGEQEiQASIABFQT4AcunpmVIIIEAEiQAS0JUDS8yBADj0PaFSECBABIkAEiMB4I0AOfby1CNlDBIgAESAC2hKYetLJoU+9NqcaEwEiQASIABKQlQA59EjYqVYkIEAEiQAS0JTAepZNDH4+tQjYRASJABIgAEVBJgBy6SmCUnQgQASJABIiAtgTyk04OPT9uVIoIEAEiQASIwLgiQA59XDUHGUMEiAARIAJEID8CSh16ftKpFBEgAkSACBABIjAqBMihjwpmUkIEiAARIAJEQFsC48Oha1tHkk4EiAARIAJEYNITIIc+6ZuYKkgEiAARIAJTgcBUcOhToR2pjkSACBABIjDFCZBDn+I7AFWfCBABIkAEJgcBcuiFtiOVJwJEgAgQASIwDgiQQx93TUIGEQEiQASIABEolAA59EIJaluepBMBIkAEiAARUESAHLoiTJSJCBABIkAEiMD4JkAOfXy3j7bWkXQiQASIABGYNATIoU+apqSKEAEiQASIwFQmQA59Kre+tnUn6USACBABIjCKBMihjyJsUkUEiAARIAJEQCsC5NC1IktytSVA0okAESACRCCFADn0FBwUIQJEgAgQASIwMQmQQ5+Y7UZWa0uApBMBIkAEiAAR0JYASSfCRIAIEAEiQASMCQFy6GOCnZQSASJABIgA2hKYetLJoU+9NqcaEwEiQASIwCQkQA59EjYqVYkIEAEiQAS0JTAepZNDH4+tQjYRASJABIgAEVBJgBy6SmCUnQgQASJABIiAtgTyk04OPT9uVIoIEAEiQASIwLgiQA59XDUHGUMEiAARIAJEID8CSh16ftKpFBEgAkSACBABIjAqBMihjwpmUkIEiAARIAJEQFsC48Oha1tHkk4EiAARIAJEYNITIIc+6ZuYKkgEiAARIAJTgcBUcOhToR2pjkSACBABIjDFCZBDn+I7AFWfCBABIkAEJgcBcuiFtiOVJwJEgAgQASIwDgiQQx93TUIGEQEiQASIABEolAA59EIJaluepBMBIkAEiAARUESAHLoiTJSJCBABIkAEiMD4JkAOfXy3j7bWkXQiQASIABGYNATIoU+apqSKEAEiQASIwFQmQA59Kre+tnUn6USACBABIjCKBMihjyJsUkUEiAARIAJEQCsC5NC1IktytSVA0okAESACRCCFADn0FBwUIQJEgAgQASIwMQmQQ5+Y7UZWa0uApBMBIkAEiAAR0JYASSfCRIAIEAEiQASMCQFy6GOCnZQSASJABIgA2hKYetLJoU+9NqcaEwEiQASIwCQkQA59EjYqVYkIEAEiQAS0JTAepZNDH4+tQjYRASJABIgAEVBJgBy6SmCUnQgQASJABIiAtgTyk04OPT9uVIoIEAEiQASIwLgiQA59XDUHGUMEiAARIAJEID8CSh16ftKpFBEgAkSACBABIjAqBMihjwpmUkIEiAARIAJEQFsC48Oha1tHkk4EiAARIAJEYNITIIc+6ZuYKkgEiAARIAJTgcBUcOhToR2pjkSACBABIjDFCZBDn+I7AFWfCBABIkAEJgcBcuiFtiOVJwJEgAgQASIwDgiQQx93TUIGEQEiQASIABEolAA59EIJaluepBMBIkAEiAARUESAHLoiTJSJCBABIkAEiMD4JkAOfXy3j7bWkXQiQASIABGYNATIoU+apqSKEAEiQASIwFQmQA59Kre+tnUn6USACBABIjCKBMihjyJsUkUEiAARIAJEQCsC5NC1IktytSVA0okAESACRCCFADn0FBwUIQJEgAgQASIwMQmQQ5+Y7UZWa0uApBMBIkAEiAAR0JYASSfCRIAIEAEiQASMCQFy6GOCnZQSASJABIgA2hKYetLJoU+9NqcaEwEiQASIwCQkQA59EjYqVYkIEAEiQAS0JTAepZNDH4+tQjYRASJABIgAEVBJgBy6SmCUnQgQASJABIiAtgTyk04OPT9uVIoIEAEiQASIwLgiQA59XDUHGUMEiAARIAJEID8CSh16ftKpFBEgAkSACBABIjAqBMihjwpmUkIEiAARIAJEQFsC48Oha1tHkk4EiAARIAJEYNITIIc+6ZuYKkgEiAARIAJTgcBUcOhToR2pjkSACBABIjDFCZBDn+I7AFWfCBABIkAEJgcBcuiFtiOVJwJEgAgQASIwDgiQQx93TUIGEQEiQASIABEolAA59EIJaluepBMBIkAEiAARUESAHLoiTJSJCBABIkAEiMD4JkAOfXy3j7bWkXQiQASIABGYNATIoU+apqSKEAEiQASIwFQmQA59Kre+tnUn6USACBABIjCKBMihjyJsUkUEiAARIAJEQCsC5NC1IktytSVA0okAESACRCCFADn0FBwUIQJEgAgQASIwMQmQQ5+Y7UZWa0uApBMBIkAEiAAR0JYASSfCRIAIEAEiQASMCQFy6GOCnZQSASJABIgA2hKYetLJoU+9NqcaEwEiQASIwCQkQA59EjYqVYkIEAEiQAS0JTAepZNDH4+tQjYRASJABIgAEVBJgBy6SmCUnQgQASJABIiAtgTyk04OPT9uVIoIEAEiQASIwLgiQA59XDUHGUMEiAARIAJEID8CSh16ftKpFBEgAkSACBABIjAqBMihjwpmUkIEiAARIAJEQFsC48Oha1tHkk4EiAARIAJEYNITIIc+6ZuYKkgEiAARIAJTgcBUcOhToR2pjkSACBABIjDFCZBDn+I7AFWfCBABIkAEJgcBcuiFtiOVJwJEgAgQASIwDgiQQx93TUIGEQEiQASIABEolAA59EIJaluepBMBIkAEiAARUESAHLoiTJSJCBABIkAEiMD4JkAOfXy3j7bWkXQiQASIABGYNATIoU+apqSKEAEiQASIwFQmQA59Kre+tnUn6USACBABIjCKBMihjyJsUkUEiAARIAJEQCsC5NC1IktytSVA0okAESACRCCFADn0FBwUIQJEgAgQASIwMQmQQ5+Y7UZWa0uApBMBIkAEiAAR0JYASSfCRIAIEAEiQASMCQFy6GOCnZQSASJABIgA2hKYetLJoU+9NqcaEwEiQASIwCQkQA59EjYqVYkIEAEiQAS0JTAepZNDH4+tQjYRASJABIgAEVBJgBy6SmCUnQgQASJABIiAtgTyk04OPT9uVIoIEAEiQASIwLgiQA59XDUHGUMEiAARIAJEID8CSh16ftKpFBEgAkSACBABIjAqBMihjwpmUkIEiAARIAJEQFsC48Oha1tHkk4EiAARIAJEYNITIIc+6ZuYKkgEiAARIAJTgcBUcOhToR2pjkSACBABIjDFCZBDn+I7AFWfCBABIkAEJgcBcuiFtiOVJwJEgAgQASIwDgiQQx93TUIGEQEiQASIABEolAA59EIJaluepBMBIkAEiAARUESAHLoiTJSJCBABIkAEiMD4JkAOfXy3j7bWkXQiQASIABGYNATIoU+apqSKEAEiQASIwFQmQA59Kre+tnUn6USACBABIjCKBMihjyJsUkUEiAARIAJEQCsC5NC1IktytSVA0okAESACRCCFADn0FBwUIQJEgAgQASIwMQmQQ5+Y7UZWa0uApBMBIkAEiAAR0JYASSfCRIAIEAEiQASMCQFy6GOCnZQSASJABIgA2hKYetLJoU+9NqcaEwEiQASIwCQkQA59EjYqVYkIEAEiQAS0JTAepZNDH4+tQjYRASJABIgAEVBJgBy6SmCUnQgQASJABIiAtgTyk04OPT9uVIoIEAEiQASIwLgiQA59XDUHGUMEiAARIAJEID8CSh16ftKpFBEgAkSACBABIjAqBMihjwpmUkIEiAARIAJEQFsC48Oha1tHkk4EiAARIAJEYNITIIc+6ZuYKkgEiAARIAJTgcBUcOhToR2pjkSACBABIjDFCZBDn+I7AFWfCBABIkAEJgcBcuiFtiOVJwJEgAgQASIwDgiQQx93TUIGEQEiQASIABEolAA59EIJaluepBMBIkAEiAARUESAHLoiTJSJCBABIkAEiMD4JkAOfXy3j7bWkXQiQASIABGYNATIoU+apqSKEAEiQASIwFQmQA59Kre+tnUn6USACBABIjCKBMihjyJsUkUEiAARIAJEQCsC5NC1IktytSVA0okAESACRCCFADn0FBwUIQJEgAgQASIwMQmQQ5+Y7UZWa0uApBMBIkAEiAAR0JYASSfCRIAIEAEiQASMCQFy6GOCnZQSASJABIgA2hKYetLJoU+9NqcaEwEiQASIwCQkQA59EjYqVYkIEAEiQAS0JTAepZNDH4+tQjYRASJABIgAEVBJgBy6SmCUnQgQASJABIiAtgTyk04OPT9uVIoIEAEiQASIwLgiQA59XDUHGUMEiAARIAJEID8CSh16ftKpFBEgAkSACBABIjAqBMihjwpmUkIEiAARIAJEQFsC48Oha1tHkk4EiAARIAJEYNITIIc+6ZuYKkgEiAARIAJTgcBUcOhToR2pjkSACBABIjDFCZBDn+I7AFWfCBABIkAEJgcBcuiFtiOVJwJEgAgQASIwDgiQQx93TUIGEQEiQASIABEolAA59EIJaluepBMBIkAEiAARUESAHLoiTJSJCBABIkAEiMD4JkAOfXy3j7bWkXQiQASIABGYNATIoU+apqSKEAEiQASIwFQmQA59Kre+tnUn6USACBABIjCKBMihjyJsUkUEiAARIAJEQCsC5NC1IktytSVA0okAESACRCCFADn0FBwUIQJEgAgQASIwMQmQQ5+Y7UZWa0uApBMBIkAEiAAR0JYASSfCRIAIEAEiQASMCQFy6GOCnZQSASJABIgA2hKYetLJoU+9NqcaEwEiQASIwCQkQA59EjYqVYkIEAEiQAS0JTAepZNDH4+tQjYRASJABIgAEVBJgBy6SmCUnQgQASJABIiAtgTyk04OPT9uVIoIEAEiQASIwLgiQA59XDUHGUMEiAARIAJEID8CSh16ftKpFBEgAkSACBABIjAqBMihjwpmUkIEiAARIAJEQFsC48Oha1tHkk4EiAARIAJEYNITIIc+6ZuYKkgEiAARIAJTgcBUcOhToR2pjkSACBABIjDFCZBDn+I7AFWfCBABIkAEJgcBcuiFtiOVJwJEgAgQASIwDgiQQx93TUIGEQEiQASIABEolAA59EIJaluepBMBIkAEiAARUESAHLoiTJSJCBABIkAEiMD4JkAOfXy3j7bWkXQiQASIABGYNATIoU+apqSKEAEiQASIwFQmQA59Kre+tnUn6USACBABIjCKBMihjyJsUkUEiAARIAJEQCsC5NC1IktytSVA0okAESACRCCFADn0FBwUIQJEgAgQASIwMQmQQ5+Y7UZWa0uApBMBIkAEiAAR0JYASSfCRIAIEAEiQASMCQFy6GOCnZQSASJABIgA2hKYetLJoU+9NqcaEwEiQASIwCQkQA59EjYqVYkIEAEiQAS0JTAepZNDH4+tQjYRASJABIgAEVBJgBy6SmCUnQgQASJABIiAtgTyk04OPT9uVIoIEAEiQASIwLgiQA59XDUHGUMEiAARIAJEID8CSh16ftKpFBEgAkSACBABIjAqBMihjwpmUkIEiAARIAJEQFsC48Oha1tHkk4EiAARIAJEYNITIIc+6ZuYKkgEiAARIAJTgcBUcOhToR2pjkSACBABIjDFCZBDn+I7AFWfCBABIkAEJgcBcuiFtiOVJwJEgAgQASIwDgiQQx93TUIGEQEiQASIABEolAA59EIJaluepBMBIkAEiAARUESAHLoiTJSJCBABIkAEiMD4JkAOfXy3j7bWkXQiQASIABGYNATIoU+apqSKEAEiQASIwFQmQA59Kre+tnUn6USACBABIjCKBMihjyJsUkUEiAARIAJEQCsC5NC1IktytSVA0okAESACRCCFADn0FBwUIQJEgAgQASIwMQmQQ5+Y7UZWa0uApBMBIkAEiAAR0JYASSfCRIAIEAEiQASMCQFy6GOCnZQSASJABIgA2hKYetLJoU+9NqcaEwEiQASIwCQkQA59EjYqVYkIEAEiQAS0JTAepZNDH4+tQjYRASJABIgAEVBJgBy6SmCUnQgQASJABIiAtgTyk04OPT9uVIoIEAEiQASIwLgiQA59XDUHGUMEiAARIAJEID8CSh16ftKpFBEgAkSACBABIjAqBMihjwpmUkIEiAARIAJEQFsC48Oha1tHkk4EiAARIAJEYNITIIc+6ZuYKkgEiAARIAJTgcBUcOhToR2pjkSACBABIjDFCZBDn+I7AFWfCBABIkAEJgcBcuiFtiOVJwJEgAgQASIwDgiQQx93TUIGEQEiQASIABEolAA59EIJaluepBMBIkAEiAARUESAHLoiTJSJCBABIkAEiMD4JkAOfXy3j7bWkXQiQASIABGYNATIoU+apqSKEAEiQASIwFQmQA59Kre+tnUn6USACBABIjCKBMihjyJsUkUEiAARIAJEQCsC5NC1IktytSVA0okAESACRCCFADn0FBwUIQJEgAgQASIwMQmQQ5+Y7UZWa0uApBMBIkAEiAAR0JYASSfCRIAIEAEiQASMCQFy6GOCnZQSASJABIgA2hKYetLJoU+9NqcaEwEiQASIwCQkQA59EjYqVYkIEAEiQAS0JTAepZNDH4+tQjYRASJABIgAEVBJgBy6SmCUnQgQASJABIiAtgTyk04OPT9uVIoIEAEiQASIwLgiQA59XDUHGUMEiAARIAJEID8CSh16ftKpFBEgAkSACBABIjAqBMihjwpmUkIEiAARIAJEQFsC48Oha1tHkk4EiAARIAJEYNITIIc+6ZuYKkgEiAARIAJTgcBUcOhToR2pjkSACBABIjDFCZBDn+I7AFWfCBABIkAEJgcBcuiFtiOVJwJEgAgQASIwDgiQQx93TUIGEQEiQASIABEolAA59EIJaluepBMBIkAEiAARUESAHLoiTJSJCBABIkAEiMD4JkAOfXy3j7bWkXQiQASIABGYNATIoU+apqSKEAEiQASIwFQmQA59Kre+tnUn6USACBABIjCKBMihjyJsUkUEiAARIAJEQCsC5NC1IktytSVA0okAESACRCCFADn0FBwUIQJEgAgQASIwMQmQQ5+Y7UZWa0uApBMBIkAEiAAR0JYASSfCRIAIEAEiQASMCQFy6GOCnZQSASJABIgA2hKYetLJoU+9NqcaEwEiQASIwCQkQA59EjYqVYkIEAEiQAS0JTAepZNDH4+tQjYRASJABIgAEVBJgBy6SmCUnQgQASJABIiAtgTyk04OPT9uVIoIEAEiQASIwLgiQA59XDUHGUMEiAARIAJEID8CSh16ftKpFBEgAkSACBABIjAqBMihjwpmUkIEiAARIAJEQFsC48Oha1tHkk4EiAARIAJEYNITIIc+6ZuYKkgEiAARIAJTgcBUcOhToR2pjkSACBABIjDFCZBDn+I7AFWfCBABIkAEJgcBcuiFtiOVJwJEgAgQASIwDgiQQx93TUIGEQEiQASIABEolAA59EIJaluepBMBIkAEiAARUESAHLoiTJSJCBABIkAEiMD4JkAOfXy3j7bWkXQiQASIABGYNATIoU+apqSKEAEiQASIwFQmQA59Kre+tnUn6USACBABIjCKBMihjyJsUkUEiAARIAJEQCsC5NC1IktytSVA0okAESACRCCFADn0FBwUIQJEgAgQASIwMQmQQ5+Y7UZWa0uApBMBIkAEiAAR0JYASSfCRIAIEAEiQASMCQFy6GOCnZQSASJABIgA2hKYetLJoU+9NqcaEwEiQASIwCQkQA59EjYqVYkIEAEiQAS0JTAepZNDH4+tQjYRASJABIgAEVBJgBy6SmCUnQgQASJABIiAtgTyk04OPT9uVIoIEAEiQASIwLgiQA59XDUHGUMEiAARIAJEID8CSh16ftKpFBEgAkSACBABIjAqBMihjwpmUkIEiAARIAJEQFsC48Oha1tHkk4EiAARIAJEYNITIIc+6ZuYKkgEiAARIAJTgcBUcOhToR2pjkSACBABIjDFCZBDn+I7AFWfCBABIkAEJgcBcuiFtiOVJwJEgAgQASIwDgiQQx93TUIGEQEiQASIABEolAA59EIJaluepBMBIkAEiAARUESAHLoiTJSJCBABIkAEiMD4JkAOfXy3j7bWkXQiQASIABGYNATIoU+apqSKEAEiQASIwFQmQA59Kre+tnUn6USACBABIjCKBMihjyJsUkUEiAARIAJEQCsC5NC1IktytSVA0okAESACRCCFADn0FBwUIQJEgAgQASIwMQmQQ5+Y7UZWa0uApBMBIkAEiAAR0JYASSfCRIAIEAEiQASMCQFy6GOCnZQSASJABIgA2hKYetLJoU+9NqcaEwEiQASIwCQkQA59EjYqVYkIEAEiQAS0JTAepZNDH4+tQjYRASJABIgAEVBJgBy6SmCUnQgQASJABIiAtgTyk04OPT9uVIoIEAEiQASIwLgiQA59XDUHGUMEiAARIAJEID8CSh16ftKpFBEgAkSACBABIjAqBMihjwpmUkIEiAARIAJEQFsC48Oha1tHkk4EiAARIAJEYNITIIc+6ZuYKkgEiAARIAJTgcBUcOhToR2pjkSACBABIjDFCZBDn+I7AFWfCBABIkAEJgcBcuiFtiOVJwJEgAgQASIwDgiQQx93TUIGEQEiQASIABEolAA59EIJaluepBMBIkAEiAARUESAHLoiTJSJCBABIkAEiMD4JkAOfXy3j7bWkXQiQASIABGYNATIoU+apqSKEAEiQASIwFQmQA59Kre+tnUn6USACBABIjCKBMihjyJsUkUEiAARIAJEQCsC5NC1IktytSVA0okAESACRCCFADn0FBwUIQJEgAgQASIwMQmQQ5+Y7UZWa0uApBMBIkAEiAAR0JYASSfCRIAIEAEiQASMCQFy6GOCnZQSASJABIgA2hKYetLJoU+9NqcaEwEiQASIwCQkQA59EjYqVYkIEAEiQAS0JTAepZNDH4+tQjYRASJABIgAEVBJgBy6SmCUnQgQASJABIiAtgTyk04OPT9uVIoIEAEiQASIwLgiQA59XDUHGUMEiAARIAJEID8CSh16ftKpFBEgAkSACBABIjAqBMihjwpmUkIEiAARIAJEQFsC48Oha1tHkk4EiAARIAJEYNITIIc+6ZuYKkgEiAARIAJTgcBUcOhToR2pjkSACBABIjDFCZBDn+I7AFWfCBABIkAEJgcBcuiFtiOVJwJEgAgQASIwDgiQQx93TUIGEQEiQASIABEolAA59EIJaluepBMBIkAEiAARUESAHLoiTJSJCBABIkAEiMD4JkAOfXy3j7bWkXQiQASIABGYNATIoU+apqSKEAEiQASIwFQmQA59Kre+tnUn6USACBABIjCKBMihjyJsUkUEiAARIAJEQCsC5NC1IktytSVA0okAESACRCCFADn0FBwUIQJEgAgQASIwMQmQQ5+Y7UZWa0uApBMBIkAEiAAR0JYASSfCRIAIEAEiQASMCQFy6GOCnZQSASJABIgA2hKYetLJoU+9NqcaEwEiQASIwCQkQA59EjYqVYkIEAEiQAS0JTAepZNDH4+tQjYRASJABIgAEVBJgBy6SmCUnQgQASJABIiAtgTyk04OPT9uVIoIEAEiQASIwLgiQA59XDUHGUMEiAARIAJEID8CSh16ftKpFBEgAkSACBABIjAqBMihjwpmUkIEiAARIAJEQFsC48Oha1tHkk4EiAARIAJEYNITIIc+6ZuYKkgEiAARIAJTgcBUcOhToR2pjkSACBABIjDFCZBDn+I7AFWfCBABIkAEJgcBcuiFtiOVJwJEgAgQASIwDgiQQx93TUIGEQEiQASIABEolAA59EIJaluepBMBIkAEiAARUESAHLoiTJSJCBABIkAEiMD4JkAOfXy3j7bWkXQiQASIABGYNATIoU+apqSKEAEiQASIwFQmQA59Kre+tnUn6USACBABIjCKBMihjyJsUkUEiAARIAJEQCsC5NC1IktytSVA0okAESACRCCFADn0FBwUIQJEgAgQASIwMQmQQ5+Y7UZWa0uApBMBIkAEiAAR0JYASSfCRIAIEAEiQASMCQFy6GOCnZQSASJABIgA2hKYetLJoU+9NqcaEwEiQASIwCQkQA59EjYqVYkIEAEiQAS0JTAepZNDH4+tQjYRASJABIgAEVBJgBy6SmCUnQgQASJABIiAtgTyk04OPT9uVIoIEAEiQASIwLgiQA59XDUHGUMEiAARIAJEID8CSh16ftKpFBEgAkSACBABIjAqBMihjwpmUkIEiAARIAJEQFsC48Oha1tHkk4EiAARIAJEYNITIIc+6ZuYKkgEiAARIAJTgcBUcOhToR2pjkSACBABIjDFCZBDn+I7AFWfCBABIkAEJgcBcuiFtiOVJwJEgAgQASIwDgiQQx93TUIGEQEiQASIABEolAA59EIJaluepBMBIkAEiAARUESAHLoiTJSJCBABIkAEiMD4JkAOfXy3j7bWkXQiQASIABGYNATIoU+apqSKEAEiQASIwFQmQA59Kre+tnUn6USACBABIjCKBMihjyJsUkUEiAARIAJEQCsC5NC1IktytSVA0okAESACRCCFADn0FBwUIQJEgAgQASIwMQmQQ5+Y7UZWa0uApBMBIkAEiAAR0JYASSfCRIAIEAEiQASMCQFy6GOCnZQSASJABIgA2hKYetLJoU+9NqcaEwEiQASIwCQkQA59EjYqVYkIEAEiQAS0JTAepZNDH4+tQjYRASJABIgAEVBJgBy6SmCUnQgQASJABIiAtgTyk04OPT9uVIoIEAEiQASIwLgiQA59XDUHGUMEiAARIAJEID8CSh16ftKpFBEgAkSACBABIjAqBMihjwpmUkIEiAARIAJEQFsC48Oha1tHkk4EiAARIAJEYNITIIc+6ZuYKkgEiAARIAJTgcBUcOhToR2pjkSACBABIjDFCZBDn+I7AFWfCBABIkAEJgcBcuiFtiOVJwJEgAgQASIwDgiQQx93TUIGEQEiQASIABEolAA59EIJaluepBMBIkAEiAARUESAHLoiTJSJCBABIkAEiMD4JkAOfXy3j7bWkXQiQASIABGYNATIoU+apqSKEAEiQASIwFQmQA59Kre+tnUn6USACBABIjCKBMihjyJsUkUEiAARIAJEQCsC5NC1IktytSVA0okAESACRCCFADn0FBwUIQJEgAgQASIwMQmQQ5+Y7UZWa0uApBMBIkAEiAAR0JYASSfCRIAIEAEiQASMCQFy6GOCnZQSASJABIgA2hKYetLJoU+9NqcaEwEiQASIwCQkQA59EjYqVYkIEAEiQAS0JTAepZNDH4+tQjYRASJABIgAEVBJgBy6SmCUnQgQASJABIiAtgTyk04OPT9uVIoIEAEiQASIwLgiQA59XDUHGUMEiAARIAJEID8CSh16ftKpFBEgAkSACBABIjAqBMihjwpmUkIEiAARIAJEQFsC48Oha1tHkk4EiAARIAJEYNITIIc+6ZuYKkgEiAARIAJTgcBUcOhToR2pjkSACBABIjDFCZBDn+I7AFWfCBABIkAEJgcBcuiFtiOVJwJEgAgQASIwDgiQQx93TUIGEQEiQASIABEolAA59EIJaluepBMBIkAEiAARUESAHLoiTJSJCBABIkAEiMD4JkAOfXy3j7bWkXQiQASIABGYNATIoU+apqSKEAEiQASIwFQmQA59Kre+tnUn6USACBABIjCKBMihjyJsUkUEiAARIAJEQCsC5NC1IktytSVA0okAESACRCCFADn0FBwUIQJEgAgQASIwMQmQQ5+Y7UZWa0uApBMBIkAEiAAR0JYASSfCRIAIEAEiQASMCQFy6GOCnZQSASJABIgA2hKYetLJoU+9NqcaEwEiQASIwCQkQA59EjYqVYkIEAEiQAS0JTAepZNDH4+tQjYRASJABIgAEVBJgBy6SmCUnQgQASJABIiAtgTyk04OPT9uVIoIEAEiQASIwLgiQA59XDUHGUMEiAARIAJEID8CSh16ftKpFBEgAkSACBABIjAqBMihjwpmUkIEiAARIAJEQFsC48Oha1tHkk4EiAARIAJEYNITIIc+6ZuYKkgEiAARIAJTgcBUcOhToR2pjkSACBABIjDFCZBDn+I7AFWfCBABIkAEJgcBcuiFtiOVJwJEgAgQASIwDgiQQx93TUIGEQEiQASIABEolAA59EIJaluepBMBIkAEiAARUESAHLoiTJSJCBABIkAEiMD4JkAOfXy3j7bWkXQiQASIABGYNATIoU+apqSKEAEiQASIwFQmQA59Kre+tnUn6USACBABIjCKBMihjyJsUkUEiAARIAJEQCsC5NC1IktytSVA0okAESACRCCFADn0FBwUIQJEgAgQASIwMQmQQ5+Y7UZWa0uApBMBIkAEiAAR0JYASSfCRIAIEAEiQASMCQFy6GOCnZQSASJABIgA2hKYetLJoU+9NqcaEwEiQASIwCQkQA59EjYqVYkIEAEiQAS0JTAepZNDH4+tQjYRASJABIgAEVBJgBy6SmCUnQgQASJABIiAtgTyk04OPT9uVIoIEAEiQASIwLgiQA59XDUHGUMEiAARIAJEID8CSh16ftKpFBEgAkSACBABIjAqBMihjwpmUkIEiAARIAJEQFsC48Oha1tHkk4EiAARIAJEYNITIIc+6ZuYKkgEiAARIAJTgcBUcOhToR2pjkSACBABIjDFCZBDn+I7AFWfCBABIkAEJgcBcuiFtiOVJwJEgAgQASIwDgiQQx93TUIGEQEiQASIABEolAA59EIJaluepBMBIkAEiAARUESAHLoiTJSJCBABIkAEiMD4JkAOfXy3j7bWkXQiQASIABGYNATIoU+apqSKEAEiQASIwFQmQA59Kre+tnUn6USACBABIjCKBMihjyJsUkUEiAARIAJEQCsC5NC1IktytSVA0okAESACRCCFADn0FBwUIQJEgAgQASIwMQmQQ5+Y7UZWa0uApBMBIkAEiAAR0JYASSfCRIAIEAEiQASMCQFy6GOCnZQSASJABIgA2hKYetLJoU+9NqcaEwEiQASIwCQkQA59EjYqVYkIEAEiQAS0JTAepZNDH4+tQjYRASJABIgAEVBJgBy6SmCUnQgQASJABIiAtgTyk04OPT9uVIoIEAEiQASIwLgiQA59XDUHGUMEiAARIAJEID8CSh16ftKpFBEgAkSACBABIjAqBMihjwpmUkIEiAARIAJEQFsC48Oha1tHkk4EiAARIAJEYNITIIc+6ZuYKkgEiAARIAJTgcBUcOhToR2pjkSACBABIjDFCZBDn+I7AFWfCBABIkAEJgcBcuiFtiOVJwJEgAgQASIwDgiQQx93TUIGEQEiQASIABEolAA59EIJaluepBMBIkAEiAARUESAHLoiTJSJCBABIkAEiMD4JkAOfXy3j7bWkXQiQASIABGYNATIoU+apqSKEAEiQASIwFQmQA59Kre+tnUn6USACBABIjCKBMihjyJsUkUEiAARIAJEQCsC5NC1IktytSVA0okAESACRCCFADn0FBwUIQJEgAgQASIwMQmQQ5+Y7UZWa0uApBMBIkAEiAAR0JYASSfCRIAIEAEiQASMCQFy6GOCnZQSASJABIgA2hKYetLJoU+9NqcaEwEiQASIwCQkQA59EjYqVYkIEAEiQAS0JTAepZNDH4+tQjYRASJABIgAEVBJgBy6SmCUnQgQASJABIiAtgTyk04OPT9uVIoIEAEiQASIwLgiQA59XDUHGUMEiAARIAJEID8CSh16ftKpFBEgAkSACBABIjAqBMihjwpmUkIEiAARIAJEQFsC48Oha1tHkk4EiAARIAJEYNITIIc+6ZuYKkgEiAARIAJTgcBUcOhToR2pjkSACBABIjDFCZBDn+I7AFWfCBABIkAEJgcBcuiFtiOVJwJEgAgQASIwDgiQQx93TUIGEQEiQASIABEolAA59EIJaluepBMBIkAEiAARUESAHLoiTJSJCBABIkAEiMD4JkAOfXy3j7bWkXQiQASIABGYNATIoU+apqSKEAEiQASIwFQmQA59Kre+tnUn6USACBABIjCKBMihjyJsUkUEiAARIAJEQCsC5NC1IktytSVA0okAESACRCCFADn0FBwUIQJEgAgQASIwMQmQQ5+Y7UZWa0uApBMBIkAEiAAR0JYASSfCRIAIEAEiQASMCQFy6GOCnZQSASJABIgA2hKYetLJoU+9NqcaEwEiQASIwCQkQA59EjYqVYkIEAEiQAS0JTAepZNDH4+tQjYRASJABIgAEVBJgBy6SmCUnQgQASJABIiAtgTyk04OPT9uVIoIEAEiQASIwLgiQA59XDUHGUMEiAARIAJEID8CSh16ftKpFBEgAkSACBABIjAqBMihjwpmUkIEiAARIAJEQFsC48Oha1tHkk4EiAARIAJEYNITIIc+6ZuYKkgEiAARIAJTgcBUcOhToR2pjkSACBABIjDFCZBDn+I7AFWfCBABIkAEJgcBcuiFtiOVJwJEgAgQASIwDgiQQx93TUIGEQEiQASIABEolAA59EIJaluepBMBIkAEiAARUESAHLoiTJSJCBABIkAEiMD4JkAOfXy3j7bWkXQiQASIABGYNATIoU+apqSKEAEiQASIwFQmQA59Kre+tnUn6USACBABIjCKBMihjyJsUkUEiAARIAJEQCsC5NC1IktytSVA0okAESACRCCFADn0FBwUIQJEgAgQASIwMQmQQ5+Y7UZWa0uApBMBIkAEiAAR0JYASSfCRIAIEAEiQASMCQFy6GOCnZQSASJABIgA2hKYetLJoU+9NqcaEwEiQASIwCQkQA59EjYqVYkIEAEiQAS0JTAepZNDH4+tQjYRASJABIgAEVBJgBy6SmCUnQgQASJABIiAtgTyk04OPT9uVIoIEAEiQASIwLgiQA59XDUHGUMEiAARIAJEID8CSh16ftKpFBEgAkSACBABIjAqBMihjwpmUkIEiAARIAJEQFsC48Oha1tHkk4EiAARIAJEYNITIIc+6ZuYKkgEiAARIAJTgcBUcOhToR2pjkSACBABIjDFCZBDn+I7AFWfCBABIkAEJgcBcuiFtiOVJwJEgAgQASIwDgiQQx93TUIGEQEiQASIABEolAA59EIJaluepBMBIkAEiAARUESAHLoiTJSJCBABIkAEiMD4JkAOfXy3j7bWkXQiQASIABGYNATIoU+apqSKEAEiQASIwFQmQA59Kre+tnUn6USACBABIjCKBMihjyJsUkUEiAARIAJEQCsC5NC1IktytSVA0okAESACRCCFADn0FBwUIQJEgAgQASIwMQmQQ5+Y7UZWa0uApBMBIkAEiAAR0JYASSfCRIAIEAEiQASMCQFy6GOCnZQSASJABIgA2hKYetLJoU+9NqcaEwEiQASIwCQkQA59EjYqVYkIEAEiQAS0JTAepZNDH4+tQjYRASJABIgAEVBJgBy6SmCUnQgQASJABIiAtgTyk04OPT9uVIoIEAEiQASIwLgiQA59XDUHGUMEiAARIAJEID8CSh16ftKpFBEgAkSACBABIjAqBMihjwpmUkIEiAARIAJEQFsC48Oha1tHkk4EiAARIAJEYNITIIc+6ZuYKkgEiAARIAJTgcBUcOhToR2pjkSACBABIjDFCZBDn+I7AFWfCBABIkAEJgcBcuiFtiOVJwJEgAgQASIwDgiQQx93TUIGEQEiQASIABEolAA59EIJaluepBMBIkAEiAARUESAHLoiTJSJCBABIkAEiMD4JkAOfXy3j7bWkXQiQASIABGYNATIoU+apqSKEAEiQASIwFQmQA59Kre+tnUn6USACBABIjCKBMihjyJsUkUEiAARIAJEQCsC5NC1IktytSVA0okAESACRCCFADn0FBwUIQJEgAgQASIwMQmQQ5+Y7UZWa0uApBMBIkAEiAAR0JYASSfCRIAIEAEiQASMCQFy6GOCnZQSASJABIgA2hKYetLJoU+9NqcaEwEiQASIwCQkQA59EjYqVYkIEAEiQAS0JTAepZNDH4+tQjYRASJABIgAEVBJgBy6SmCUnQgQASJABIiAtgTyk04OPT9uVIoIEAEiQASIwLgiQA59XDUHGUMEiAARIAJEID8CSh16ftKpFBEgAkSACBABIjAqBMihjwpmUkIEiAARIAJEQFsC48Oha1tHkk4EiAARIAJEYNITIIc+6ZuYKkgEiAARIAJTgcBUcOhToR2pjkSACBABIjDFCZBDn+I7AFWfCBABIkAEJgcBcuiFtiOVJwJEgAgQASIwDgiQQx93TUIGEQEiQASIABEolAA59EIJaluepBMBIkAEiAARUESAHLoiTJSJCBABIkAEiMD4JkAOfXy3j7bWkXQiQASIABGYNATIoU+apqSKEAEiQASIwFQmQA59Kre+tnUn6USACBABIjCKBMihjyJsUkUEiAARIAJEQCsC5NC1IktytSVA0okAESACRCCFADn0FBwUIQJEgAgQASIwMQmQQ5+Y7UZWa0uApBMBIkAEiAAR0JYASSfCRIAIEAEiQASMCQFy6GOCnZQSASJABIgA2hKYetLJoU+9NqcaEwEiQASIwCQkQA59EjYqVYkIEAEiQAS0JTAepZNDH4+tQjYRASJABIgAEVBJgBy6SmCUnQgQASJABIiAtgTyk04OPT9uVIoIEAEiQASIwLgiQA59XDUHGUMEiAARIAJEID8CSh16ftKpFBEgAkSACBABIjAqBMihjwpmUkIEiAARIAJEQFsC48Oha1tHkk4EiAARIAJEYNITIIc+6ZuYKkgEiAARIAJTgcBUcOhToR2pjkSACBABIjDFCZBDn+I7AFWfCBABIkAEJgcBcuiFtiOVJwJEgAgQASIwDgiQQx93TUIGEQEiQASIABEolAA59EIJaluepBMBIkAEiAARUESAHLoiTJSJCBABIkAEiMD4JkAOfXy3j7bWkXQiQASIABGYNATIoU+apqSKEAEiQASIwFQmQA59Kre+tnUn6USACBABIjCKBMihjyJsUkUEiAARIAJEQCsC5NC1IktytSVA0okAESACRCCFADn0FBwUIQJEgAgQASIwMQmQQ5+Y7UZWa0uApBMBIkAEiAAR0JYASSfCRIAIEAEiQASMCQFy6GOCnZQSASJABIgA2hKYetLJoU+9NqcaEwEiQASIwCQkQA59EjYqVYkIEAEiQAS0JTAepZNDH4+tQjYRASJABIgAEVBJgBy6SmCUnQgQASJABIiAtgTyk04OPT9uVIoIEAEiQASIwLgiQA59XDUHGUMEiAARIAJEID8CSh16ftKpFBEgAkSACBABIjAqBMihjwpmUkIEiAARIAJEQFsC48Oha1tHkk4EiAARIAJEYNITIIc+6ZuYKkgEiAARIAJTgcBUcOhToR2pjkSACBABIjDFCZBDn+I7AFWfCBABIkAEJgcBcuiFtiOVJwJEgAgQASIwDgiQQx93TUIGEQEiQASIABEolAA59EIJaluepBMBIkAEiAARUESAHLoiTJSJCBABIkAEiMD4JkAOfXy3j7bWkXQiQASIABGYNATIoU+apqSKEAEiQASIwFQmQA59Kre+tnUn6USACBABIjCKBMihjyJsUkUEiAARIAJEQCsC5NC1IktytSVA0okAESACRCCFADn0FBwUIQJEgAgQASIwMQmQQ5+Y7UZWa0uApBMBIkAEiAAR0JYASSfCRIAIEAEiQASMCQFy6GOCnZQSASJABIgA2hKYetLJoU+9NqcaEwEiQASIwCQkQA59EjYqVYkIEAEiQAS0JTAepZNDH4+tQjYRASJABIgAEVBJgBy6SmCUnQgQASJABIiAtgTyk04OPT9uVIoIEAEiQASIwLgiQA59XDUHGUMEiAARIAJEID8CSh16ftKpFBEgAkSACBABIjAqBMihjwpmUkIEiAARIAJEQFsC48Oha1tHkk4EiAARIAJEYNITIIc+6ZuYKkgEiAARIAJTgcBUcOhToR2pjkSACBABIjDFCZBDn+I7AFWfCBABIkAEJgcBcuiFtiOVJwJEgAgQASIwDgiQQx93TUIGEQEiQASIABEolAA59EIJaluepBMBIkAEiAARUESAHLoiTJSJCBABIkAEiMD4JkAOfXy3j7bWkXQiQASIABGYNATIoU+apqSKEAEiQASIwFQmQA59Kre+tnUn6USACBABIjCKBMihjyJsUkUEiAARIAJEQCsC5NC1IktytSVA0okAESACRCCFADn0FBwUIQJEgAgQASIwMQmQQ5+Y7UZWa0uApBMBIkAEiAAR0JYASSfCRIAIEAEiQASMCQFy6GOCnZQSASJABIgA2hKYetLJoU+9NqcaEwEiQASIwCQkQA59EjYqVYkIEAEiQAS0JTAepZNDH4+tQjYRASJABIgAEVBJgBy6SmCUnQgQASJABIiAtgTyk04OPT9uVIoIEAEiQASIwLgiQA59XDUHGUMEiAARIAJEID8CSh16ftKpFBEgAkSACBABIjAqBMihjwpmUkIEiAARIAJEQFsC48Oha1tHkk4EiAARIAJEYNITIIc+6ZuYKkgEiAARIAJTgcBUcOhToR2pjkSACBABIjDFCZBDn+I7AFWfCBABIkAEJgcBcuiFtiOVJwJEgAgQASIwDgiQQx93TUIGEQEiQASIABEolAA59EIJaluepBMBIkAEiAARUESAHLoiTJSJCBABIkAEiMD4JkAOfXy3j7bWkXQiQASIABGYNATIoU+apqSKEAEiQASIwFQmQA59Kre+tnUn6USACBABIjCKBMihjyJsUkUEiAARIAJEQCsC5NC1IktytSVA0okAESACRCCFADn0FBwUIQJEgAgQASIwMQmQQ5+Y7UZWa0uApBMBIkAEiAAR0JYASSfCRIAIEAEiQASMCQFy6GOCnZQSASJABIgA2hKYetLJoU+9NqcaEwEiQASIwCQkQA59EjYqVYkIEAEiQAS0JTAepZNDH4+tQjYRASJABIgAEVBJgBy6SmCUnQgQASJABIiAtgTyk04OPT9uVIoIEAEiQASIwLgiQA59XDUHGUMEiAARIAJEID8CSh16ftKpFBEgAkSACBABIjAqBMihjwpmUkIEiAARIAJEQFsC48Oha1tHkk4EiAARIAJEYNITIIc+6ZuYKkgEiAARIAJTgcBUcOhToR2pjkSACBABIjDFCZBDn+I7AFWfCBABIkAEJgcBcuiFtiOVJwJEgAgQASIwDgiQQx93TUIGEQEiQASIABEolAA59EIJaluepBMBIkAEiAARUESAHLoiTJSJCBABIkAEiMD4JkAOfXy3j7bWkXQiQASIABGYNATIoU+apqSKEAEiQASIwFQmQA59Kre+tnUn6USACBABIjCKBMihjyJsUkUEiAARIAJEQCsC5NC1IktytSVA0okAESACRCCFADn0FBwUIQJEgAgQASIwMQmQQ5+Y7UZWa0uApBMBIkAEiAAR0JYASSfCRIAIEAEiQASMCQFy6GOCnZQSASJABIgA2hKYetLJoU+9NqcaEwEiQASIwCQkQA59EjYqVYkIEAEiQAS0JTAepZNDH4+tQjYRASJABIgAEVBJgBy6SmCUnQgQASJABIiAtgTyk04OPT9uVIoIEAEiQASIwLgiQA59XDUHGUMEiAARIAJEID8CSh16ftKpFBEgAkSACBABIjAqBMihjwpmUkIEiAARIAJEQFsC48Oha1tHkk4EiAARIAJEYNITIIc+6ZuYKkgEiAARIAJTgcBUcOhToR2pjkSACBABIjDFCZBDn+I7AFWfCBABIkAEJgcBcuiFtiOVJwJEgAgQASIwDgiQQx93TUIGEQEiQASIABEolAA59EIJaluepBMBIkAEiAARUESAHLoiTJSJCBABIkAEiMD4JkAOfXy3j7bWkXQiQASIABGYNATIoU+apqSKEAEiQASIwFQmQA59Kre+tnUn6USACBABIjCKBMihjyJsUkUEiAARIAJEQCsC5NC1IktytSVA0okAESACRCCFADn0FBwUIQJEgAgQASIwMQmQQ5+Y7UZWa0uApBMBIkAEiAAR0JYASSfCRIAIEAEiQASMCQFy6GOCnZQSASJABIgA2hKYetLJoU+9NqcaEwEiQASIwCQkQA59EjYqVYkIEAEiQAS0JTAepZNDH4+tQjYRASJABIgAEVBJgBy6SmCUnQgQASJABIiAtgTyk04OPT9uVIoIEAEiQASIwLgiQA59XDUHGUMEiAARIAJEID8CSh16ftKpFBEgAkSACBABIjAqBMihjwpmUkIEiAARIAJEQFsC48Oha1tHkk4EiAARIAJEYNITIIc+6ZuYKkgEiAARIAJTgcBUcOhToR2pjkSACBABIjDFCZBDn+I7AFWfCBABIkAEJgcBcuiFtiOVJwJEgAgQASIwDgiQQx93TUIGEQEiQASIABEolAA59EIJaluepBMBIkAEiAARUESAHLoiTJSJCBABIkAEiMD4JkAOfXy3j7bWkXQiQASIABGYNATIoU+apqSKEAEiQASIwFQmQA59Kre+tnUn6USACBABIjCKBMihjyJsUkUEiAARIAJEQCsC5NC1IktytSVA0okAESACRCCFADn0FBwUIQJEgAgQASIwMQmQQ5+Y7UZWa0uApBMBIkAEiAAR0JYASSfCRIAIEAEiQASMCQFy6GOCnZQSASJABIgA2hKYetLJoU+9NqcaEwEiQASIwCQkQA59EjYqVYkIEAEiQAS0JTAepZNDH4+tQjYRASJABIgAEVBJgBy6SmCUnQgQASJABIiAtgTyk04OPT9uVIoIEAEiQASIwLgiQA59XDUHGUMEiAARIAJEID8CSh16ftKpFBEgAkSACBABIjAqBMihjwpmUkIEiAARIAJEQFsC48Oha1tHkk4EiAARIAJEYNITIIc+6ZuYKkgEiAARIAJTgcBUcOhToR2pjkSACBABIjDFCZBDn+I7AFWfCBABIkAEJgcBcuiFtiOVJwJEgAgQASIwDgiQQx93TUIGEQEiQASIABEolAA59EIJaluepBMBIkAEiAARUESAHLoiTJSJCBABIkAEiMD4JkAOfXy3j7bWkXQiQASIABGYNATIoU+apqSKEAEiQASIwFQmQA59Kre+tnUn6USACBABIjCKBMihjyJsUkUEiAARIAJEQCsC5NC1IktytSVA0okAESACRCCFADn0FBwUIQJEgAgQASIwMQmQQ5+Y7UZWa0uApBMBIkAEiAAR0JYASSfCRIAIEAEiQASMCQFy6GOCnZQSASJABIgA2hKYetLJoU+9NqcaEwEiQASIwCQkQA59EjYqVYkIEAEiQAS0JTAepZNDH4+tQjYRASJABIgAEVBJgBy6SmCUnQgQASJABIiAtgTyk04OPT9uVIoIEAEiQASIwLgiQA59XDUHGUMEiAARIAJEID8CSh16ftKpFBEgAkSACBABIjAqBMihjwpmUkIEiAARIAJEQFsC48Oha1tHkk4EiAARIAJEYNITIIc+6ZuYKkgEiAARIAJTgcBUcOhToR2pjkSACBABIjDFCZBDn+I7AFWfCBABIkAEJgcBcuiFtiOVJwJEgAgQASIwDgiQQx93TUIGEQEiQASIABEolAA59EIJaluepBMBIkAEiAARUESAHLoiTJSJCBABIkAEiMD4JkAOfXy3j7bWkXQiQASIABGYNATIoU+apqSKEAEiQASIwFQmQA59Kre+tnUn6USACBABIjCKBMihjyJsUkUEiAARIAJEQCsC5NC1IktytSVA0okAESACRCCFADn0FBwUIQJEgAgQASIwMQmQQ5+Y7UZWa0uApBMBIkAEiAAR0JYASSfCRIAIEAEiQASMCQFy6GOCnZQSASJABIgA2hKYetLJoU+9NqcaEwEiQASIwCQkQA59EjYqVYkIEAEiQAS0JTAepZNDH4+tQjYRASJABIgAEVBJgBy6SmCUnQgQASJABIiAtgTyk04OPT9uVIoIEAEiQASIwLgiQA59XDUHGUMEiAARIAJEID8CSh16ftKpFBEgAkSACBABIjAqBMihjwpmUkIEiAARIAJEQFsC48Oha1tHkk4EiAARIAJEYNITIIc+6ZuYKkgEiAARIAJTgcBUcOhToR2pjkSACBABIjDFCZBDn+I7AFWfCBABIkAEJgcBcuiFtiOVJwJEgAgQASIwDgiQQx93TUIGEQEiQASIABEolAA59EIJaluepBMBIkAEiAARUESAHLoiTJSJCBABIkAEiMD4JkAOfXy3j7bWkXQiQASIABGYNATIoU+apqSKEAEiQASIwFQmQA59Kre+tnUn6USACBABIjCKBMihjyJsUkUEiAARIAJEQCsC5NC1IktytSVA0okAESACRCCFADn0FBwUIQJEgAgQASIwMQmQQ5+Y7UZWa0uApBMBIkAEiAAR0JYASSfCRIAIEAEiQASMCQFy6GOCnZQSASJABIgA2hKYetLJoU+9NqcaEwEiQASIwCQkQA59EjYqVYkIEAEiQAS0JTAepZNDH4+tQjYRASJABIgAEVBJgBy6SmCUnQgQASJABIiAtgTyk04OPT9uVIoIEAEiQASIwLgiQA59XDUHGUMEiAARIAJEID8CSh16ftKpFBEgAkSACBABIjAqBMihjwpmUkIEiAARIAJEQFsC48Oha1tHkk4EiAARIAJEYNITIIc+6ZuYKkgEiAARIAJTgcBUcOhToR2pjkSACBABIjDFCZBDn+I7AFWfCBABIkAEJgcBcuiFtiOVJwJEgAgQASIwDgiQQx93TUIGEQEiQASIABEolAA59EIJaluepBMBIkAEiAARUESAHLoiTJSJCBABIkAEiMD4JkAOfXy3j7bWkXQiQASIABGYNATIoU+apqSKEAEiQASIwFQmQA59Kre+tnUn6USACBABIjCKBMihjyJsUkUEiAARIAJEQCsC5NC1IktytSVA0okAESACRCCFADn0FBwUIQJEgAgQASIwMQmQQ5+Y7UZWa0uApBMBIkAEiAAR0JYASSfCRIAIEAEiQASMCQFy6GOCnZQSASJABIgA2hKYetLJoU+9NqcaEwEiQASIwCQkQA59EjYqVYkIEAEiQAS0JTAepZNDH4+tQjYRASJABIgAEVBJgBy6SmCUnQgQASJABIiAtgTyk04OPT9uVIoIEAEiQASIwLgiQA59XDUHGUMEiAARIAJEID8CSh16ftKpFBEgAkSACBABIjAqBMihjwpmUkIEiAARIAJEQFsC48Oha1tHkk4EiAARIAJEYNITIIc+6ZuYKkgEiAARIAJTgcBUcOhToR2pjkSACBABIjDFCZBDn+I7AFWfCBABIkAEJgcBcuiFtiOVJwJEgAgQASIwDgiQQx93TUIGEQEiQASIABEolAA59EIJaluepBMBIkAEiAARUESAHLoiTJSJCBABIkAEiMD4JkAOfXy3j7bWkXQiQASIABGYNATIoU+apqSKEAEiQASIwFQmQA59Kre+tnUn6USACBABIjCKBMihjyJsUkUEiAARIAJEQCsC5NC1IktytSVA0okAESACRCCFADn0FBwUIQJEgAgQASIwMQmQQ5+Y7UZWa0uApBMBIkAEiAAR0JYASSfCRIAIEAEiQASMCQFy6GOCnZQSASJABIgA2hKYetLJoU+9NqcaEwEiQASIwCQkQA59EjYqVYkIEAEiQAS0JTAepZNDH4+tQjYRASJABIgAEVBJgBy6SmCUnQgQASJABIiAtgTyk04OPT9uVIoIEAEiQASIwLgiQA59XDUHGUMEiAARIAJEID8CSh16ftKpFBEgAkSACBABIjAqBMihjwpmUkIEiAARIAJEQFsC48Oha1tHkk4EiAARIAJEYNITIIc+6ZuYKkgEiAARIAJTgcBUcOhToR2pjkSACBABIjDFCZBDn+I7AFWfCBABIkAEJgcBcuiFtiOVJwJEgAgQASIwDgiQQx93TUIGEQEiQASIABEolAA59EIJaluepBMBIkAEiAARUESAHLoiTJSJCBABIkAEiMD4JkAOfXy3j7bWkXQiQASIABGYNATIoU+apqSKEAEiQASIwFQmQA59Kre+tnUn6USACBABIjCKBMihjyJsUkUEiAARIAJEQCsC5NC1IktytSVA0okAESACRCCFADn0FBwUIQJEgAgQASIwMQmQQ5+Y7UZWa0uApBMBIkAEiAAR0JYASSfCRIAIEAEiQASMCQFy6GOCnZQSASJABIgA2hKYetLJoU+9NqcaEwEiQASIwCQkQA59EjYqVYkIEAEiQAS0JTAepZNDH4+tQjYRASJABIgAEVBJgBy6SmCUnQgQASJABIiAtgTyk04OPT9uVIoIEAEiQASIwLgiQA59XDUHGUMEiAARIAJEID8CSh16ftKpFBEgAkSACBABIjAqBMihjwpmUkIEiAARIAJEQFsC48Oha1tHkk4EiAARIAJEYNITIIc+6ZuYKkgEiAARIAJTgcBUcOhToR2pjkSACBABIjDFCZBDn+I7AFWfCBABIkAEJgcBcuiFtiOVJwJEgAgQASIwDgiQQx93TUIGEQEiQASIABEolAA59EIJaluepBMBIkAEiAARUESAHLoiTJSJCBABIkAEiMD4JkAOfXy3j7bWkXQiQASIABGYNATIoU+apqSKEAEiQASIwFQmQA59Kre+tnUn6USACBABIjCKBMihjyJsUkUEiAARIAJEQCsC5NC1IktytSVA0okAESACRCCFADn0FBwUIQJEgAgQASIwMQmQQ5+Y7UZWa0uApBMBIkAEiAAR0JYASSfCRIAIEAEiQASMCQFy6GOCnZQSASJABIgA2hKYetLJoU+9NqcaEwEiQASIwCQkQA59EjYqVYkIEAEiQAS0JTAepZNDH4+tQjYRASJABIgAEVBJgBy6SmCUnQgQASJABIiAtgTyk04OPT9uVIoIEAEiQASIwLgiQA59XDUHGUMEiAARIAJEID8CSh16ftKpFBEgAkSACBABIjAqBMihjwpmUkIEiAARIAJEQFsC48Oha1tHkk4EiAARIAJEYNITIIc+6ZuYKkgEiAARIAJTgcBUcOhToR2pjkSACBABIjDFCZBDn+I7AFWfCBABIkAEJgcBcuiFtiOVJwJEgAgQASIwDgiQQx93TUIGEQEiQASIABEolAA59EIJaluepBMBIkAEiAARUESAHLoiTJSJCBABIkAEiMD4JkAOfXy3j7bWkXQiQASIABGYNATIoU+apqSKEAEiQASIwFQmQA59Kre+tnUn6USACBABIjCKBMihjyJsUkUEiAARIAJEQCsC5NC1IktytSVA0okAESACRCCFADn0FBwUIQJEgAgQASIwMQmQQ5+Y7UZWa0uApBMBIkAEiAAR0JYASSfCRIAIEAEiQASMCQFy6GOCnZQSASJABIgA2hKYetLJoU+9NqcaEwEiQASIwCQkQA59EjYqVYkIEAEiQAS0JTAepZNDH4+tQjYRASJABIgAEVBJgBy6SmCUnQgQASJABIiAtgTyk04OPT9uVIoIEAEiQASIwLgiQA59XDUHGUMEiAARIAJEID8CSh16ftKpFBEgAkSACBABIjAqBMihjwpmUkIEiAARIAJEQFsC48Oha1tHkk4EiAARIAJEYNITIIc+6ZuYKkgEiAARIAJTgcBUcOhToR2pjkSACBABIjDFCZBDn+I7AFWfCBABIkAEJgcBcuiFtiOVJwJEgAgQASIwDgiQQx93TUIGEQEiQASIABEolAA59EIJaluepBMBIkAEiAARUESAHLoiTJSJCBABIkAEiMD4JkAOfXy3j7bWkXQiQASIABGYNATIoU+apqSKEAEiQASIwFQmQA59Kre+tnUn6USACBABIjCKBMihjyJsUkUEiAARIAJEQCsC5NC1IktytSVA0okAESACRCCFADn0FBwUIQJEgAgQASIwMQmQQ5+Y7UZWa0uApBMBIkAEiAAR0JYASSfCRIAIEAEiQASMCQFy6GOCnZQSASJABIgA2hKYetLJoU+9NqcaEwEiQASIwCQkQA59EjYqVYkIEAEiQAS0JTAepZNDH4+tQjYRASJABIgAEVBJgBy6SmCUnQgQASJABIiAtgTyk04OPT9uVIoIEAEiQASIwLgiQA59XDUHGUMEiAARIAJEID8CSh16ftKpFBEgAkSACBABIjAqBMihjwpmUkIEiAARIAJEQFsC48Oha1tHkk4EiAARIAJEYNITIIc+6ZuYKkgEiAARIAJTgcBUcOhToR2pjkSACBABIjDFCZBDn+I7AFWfCBABIkAEJgcBcuiFtiOVJwJEgAgQASIwDgiQQx93TUIGEQEiQASIABEolAA59EIJaluepBMBIkAEiAARUESAHLoiTJSJCBABIkAEiMD4JkAOfXy3j7bWkXQiQASIABGYNATIoU+apqSKEAEiQASIwFQmQA59Kre+tnUn6USACBABIjCKBMihjyJsUkUEiAARIAJEQCsC5NC1IktytSVA0okAESACRCCFADn0FBwUIQJEgAgQASIwMQmQQ5+Y7UZWa0uApBMBIkAEiAAR0JYASSfCRIAIEAEiQASMCQFy6GOCnZQSASJABIgA2hKYetLJoU+9NqcaEwEiQASIwCQkQA59EjYqVYkIEAEiQAS0JTAepZNDH4+tQjYRASJABIgAEVBJgBy6SmCUnQgQASJABIiAtgTyk04OPT9uVIoIEAEiQASIwLgiQA59XDUHGUMEiAARIAJEID8CSh16ftKpFBEgAkSACBABIjAqBMihjwpmUkIEiAARIAJEQFsC48Oha1tHkk4EiAARIAJEYNITIIc+6ZuYKkgEiAARIAJTgcBUcOhToR2pjkSACBABIjDFCZBDn+I7AFWfCBABIkAEJgcBcuiFtiOVJwJEgAgQASIwDgiQQx93TUIGEQEiQASIABEolAA59EIJaluepBMBIkAEiAARUESAHLoiTJSJCBABIkAEiMD4JkAOfXy3j7bWkXQiQASIABGYNATIoU+apqSKEAEiQASIwFQmQA59Kre+tnUn6USACBABIjCKBMihjyJsUkUEiAARIAJEQCsC5NC1IktytSVA0okAESACRCCFADn0FBwUIQJEgAgQASIwMQmQQ5+Y7UZWa0uApBMBIkAEiAAR0JYASSfCRIAIEAEiQASMCQFy6GOCnZQSASJABIgA2hKYetLJoU+9NqcaEwEiQASIwCQkQA59EjYqVYkIEAEiQAS0JTAepZNDH4+tQjYRASJABIgAEVBJgBy6SmCUnQgQASJABIiAtgTyk04OPT9uVIoIEAEiQASIwLgiQA59XDUHGUMEiAARIAJEID8CSh16ftKpFBEgAkSACBABIjAqBMihjwpmUkIEiAARIAJEQFsC48Oha1tHkk4EiAARIAJEYNITIIc+6ZuYKkgEiAARIAJTgcBUcOhToR2pjkSACBABIjDFCZBDn+I7AFWfCBABIkAEJgcBcuiFtiOVJwJEgAgQASIwDgiQQx93TUIGEQEiQASIABEolAA59EIJaluepBMBIkAEiAARUESAHLoiTJSJCBABIkAEiMD4JkAOfXy3j7bWkXQiQASIABGYNATIoU+apqSKEAEiQASIwFQmQA59Kre+tnUn6USACBABIjCKBMihjyJsUkUEiAARIAJEQCsC5NC1IktytSVA0okAESACRCCFADn0FBwUIQJEgAgQASIwMQmQQ5+Y7UZWa0uApBMBIkAEiAAR0JYASSfCRIAIEAEiQASMCQFy6GOCnZQSASJABIgA2hKYetLJoU+9NqcaEwEiQASIwCQkQA59EjYqVYkIEAEiQAS0JTAepZNDH4+tQjYRASJABIgAEVBJgBy6SmCUnQgQASJABIiAtgTyk04OPT9uVIoIEAEiQASIwLgiQA59XDUHGUMEiAARIAJEID8CSh16ftKpFBEgAkSACBABIjAqBMihjwpmUkIEiAARIAJEQFsC48Oha1tHkk4EiAARIAJEYNITIIc+6ZuYKkgEiAARIAJTgcBUcOhToR2pjkSACBABIjDFCZBDn+I7AFWfCBABIkAEJgcBcuiFtiOVJwJEgAgQASIwDgiQQx93TUIGEQEiQASIABEolAA59EIJaluepBMBIkAEiAARUESAHLoiTJSJCBABIkAEiMD4JkAOfXy3j7bWkXQiQASIABGYNATIoU+apqSKEAEiQASIwFQmQA59Kre+tnUn6USACBABIjCKBMihjyJsUkUEiAARIAJEQCsC5NC1IktytSVA0okAESACRCCFADn0FBwUIQJEgAgQASIwMQmQQ5+Y7UZWa0uApBMBIkAEiAAR0JYASSfCRIAIEAEiQASMCQFy6GOCnZQSASJABIgA2hKYetLJoU+9NqcaEwEiQASIwCQkQA59EjYqVYkIEAEiQAS0JTAepZNDH4+tQjYRASJABIgAEVBJgBy6SmCUnQgQASJABIiAtgTyk04OPT9uVIoIEAEiQASIwLgiQA59XDUHGUMEiAARIAJEID8CSh16ftKpFBEgAkSACBABIjAqBMihjwpmUkIEiAARIAJEQFsC48Oha1tHkk4EiAARIAJEYNITIIc+6ZuYKkgEiAARIAJTgcBUcOhToR2pjkSACBABIjDFCZBDn+I7AFWfCBABIkAEJgcBcuiFtiOVJwJEgAgQASIwDgiQQx93TUIGEQEiQASIABEolAA59EIJaluepBMBIkAEiAARUESAHLoiTJSJCBABIkAEiMD4JkAOfXy3j7bWkXQiQASIABGYNATIoU+apqSKEAEiQASIwFQmQA59Kre+tnUn6USACBABIjCKBMihjyJsUkUEiAARIAJEQCsC5NC1IktytSVA0okAESACRCCFADn0FBwUIQJEgAgQASIwMQmQQ5+Y7UZWa0uApBMBIkAEiAAR0JYASSfCRIAIEAEiQASMCQFy6GOCnZQSASJABIgA2hKYetLJoU+9NqcaEwEiQASIwCQkQA59EjYqVYkIEAEiQAS0JTAepZNDH4+tQjYRASJABIgAEVBJgBy6SmCUnQgQASJABIiAtgTyk04OPT9uVIoIEAEiQASIwLgiQA59XDUHGUMEiAARIAJEID8CSh16ftKpFBEgAkSACBABIjAqBMihjwpmUkIEiAARIAJEQFsC48Oha1tHkk4EiAARIAJEYNITIIc+6ZuYKkgEiAARIAJTgcBUcOhToR2pjkSACBABIjDFCZBDn+I7AFWfCBABIkAEJgcBcuiFtiOVJwJEgAgQASIwDgiQQx93TUIGEQEiQASIABEolAA59EIJaluepBMBIkAEiAARUESAHLoiTJSJCBABIkAEiMD4JkAOfXy3j7bWkXQiQASIABGYNATIoU+apqSKEAEiQASIwFQmQA59Kre+tnUn6USACBABIjCKBMihjyJsUkUEiAARIAJEQCsC5NC1IktytSVA0okAESACRCCFADn0FBwUIQJEgAgQASIwMQmQQ5+Y7UZWa0uApBMBIkAEiAAR0JYASSfCRIAIEAEiQASMCQFy6GOCnZQSASJABIgA2hKYetLJoU+9NqcaEwEiQASIwCQkQA59EjYqVYkIEAEiQAS0JTAepZNDH4+tQjYRASJABIgAEVBJgBy6SmCUnQgQASJABIiAtgTyk04OPT9uVIoIEAEiQASIwLgiQA59XDUHGUMEiAARIAJEID8CSh16ftKpFBEgAkSACBABIjAqBMihjwpmUkIEiAARIAJEQFsC48Oha1tHkk4EiAARIAJEYNITIIc+6ZuYKkgEiAARIAJTgcBUcOhToR2pjkSACBABIjDFCZBDn+I7AFWfCBABIkAEJgcBcuiFtiOVJwJEgAgQASIwDgiQQx93TUIGEQEiQASIABEolAA59EIJaluepBMBIkAEiAARUESAHLoiTJSJCBABIkAEiMD4JkAOfXy3j7bWkXQiQASIABGYNATIoU+apqSKEAEiQASIwFQmQA59Kre+tnUn6USACBABIjCKBMihjyJsUkUEiAARIAJEQCsC5NC1IktytSVA0okAESACRCCFADn0FBwUIQJEgAgQASIwMQmQQ5+Y7UZWa0uApBMBIkAEiAAR0JYASSfCRIAIEAEiQASMCQFy6GOCnZQSASJABIgA2hKYetLJoU+9NqcaEwEiQASIwCQkQA59EjYqVYkIEAEiQAS0JTAepZNDH4+tQjYRASJABIgAEVBJgBy6SmCUnQgQASJABIiAtgTyk04OPT9uVIoIEAEiQASIwLgiQA59XDUHGUMEiAARIAJEID8CSh16ftKpFBEgAkSACBABIjAqBMihjwpmUkIEiAARIAJEQFsC48Oha1tHkk4EiAARIAJEYNITIIc+6ZuYKkgEiAARIAJTgcBUcOhToR2pjkSACBABIjDFCZBDn+I7AFWfCBABIkAEJgcBcuiFtiOVJwJEgAgQASIwDgiQQx93TUIGEQEiQASIABEolAA59EIJaluepBMBIkAEiAARUESAHLoiTJSJCBABIkAEiMD4JkAOfXy3j7bWkXQiQASIABGYNATIoU+apqSKEAEiQASIwFQmQA59Kre+tnUn6USACBABIjCKBMihjyJsUkUEiAARIAJEQCsC5NC1IktytSVA0okAESACRCCFADn0FBwUIQJEgAgQASIwMQmQQ5+Y7UZWa0uApBMBIkAEiAAR0JYASSfCRIAIEAEiQASMCQFy6GOCnZQSASJABIgA2hKYetLJoU+9NqcaEwEiQASIwCQkQA59EjYqVYkIEAEiQAS0JTAepZNDH4+tQjYRASJABIgAEVBJgBy6SmCUnQgQASJABIiAtgTyk04OPT9uVIoIEAEiQASIwLgiQA59XDUHGUMEiAARIAJEID8CSh16ftKpFBEgAkSACBABIjAqBMihjwpmUkIEiAARIAJEQFsC48Oha1tHkk4EiAARIAJEYNITIIc+6ZuYKkgEiAARIAJTgcBUcOhToR2pjkSACBABIjDFCZBDn+I7AFWfCBABIkAEJgcBcuiFtiOVJwJEgAgQASIwDgiQQx93TUIGEQEiQASIABEolAA59EIJaluepBMBIkAEiAARUESAHLoiTJSJCBABIkAEiMD4JkAOfXy3j7bWkXQiQASIABGYNATIoU+apqSKEAEiQASIwFQmQA59Kre+tnUn6USACBABIjCKBMihjyJsUkUEiAARIAJEQCsC5NC1IktytSVA0okAESACRCCFADn0FBwUIQJEgAgQASIwMQmQQ5+Y7UZWa0uApBMBIkAEiAAR0JYASSfCRIAIEAEiQASMCQFy6GOCnZQSASJABIgA2hKYetLJoU+9NqcaEwEiQASIwCQkQA59EjYqVYkIEAEiQAS0JTAepZNDH4+tQjYRASJABIgAEVBJgBy6SmCUnQgQASJABIiAtgTyk04OPT9uVIoIEAEiQASIwLgiQA59XDUHGUMEiAARIAJEID8CSh16ftKpFBEgAkSACBABIjAqBMihjwpmUkIEiAARIAJEQFsC48Oha1tHkk4EiAARIAJEYNITIIc+6ZuYKkgEiAARIAJTgcBUcOhToR2pjkSACBABIjDFCZBDn+I7AFWfCBABIkAEJgcBcuiFtiOVJwJEgAgQASIwDgiQQx93TUIGEQEiQASIABEolAA59EIJaluepBMBIkAEiAARUESAHLoiTJSJCBABIkAEiMD4JkAOfXy3j7bWkXQiQASIABGYNATIoU+apqSKEAEiQASIwFQmQA59Kre+tnUn6USACBABIjCKBMihjyJsUkUEiAARIAJEQCsC5NC1IktytSVA0okAESACRCCFADn0FBwUIQJEgAgQASIwMQmQQ5+Y7UZWa0uApBMBIkAEiAAR0JYASSfCRIAIEAEiQASMCQFy6GOCnZQSASJABIgA2hKYetLJoU+9NqcaEwEiQASIwCQkQA59EjYqVYkIEAEiQAS0JTAepZNDH4+tQjYRASJABIgAEVBJgBy6SmCUnQgQASJABIiAtgTyk04OPT9uVIoIEAEiQASIwLgiQA59XDUHGUMEiAARIAJEID8CSh16ftKpFBEgAkSACBABIjAqBMihjwpmUkIEiAARIAJEQFsC48Oha1tHkk4EiAARIAJEYNITIIc+6ZuYKkgEiAARIAJTgcBUcOhToR2pjkSACBABIjDFCZBDn+I7AFWfCBABIkAEJgcBcuiFtiOVJwJEgAgQASIwDgiQQx93TUIGEQEiQASIABEolAA59EIJaluepBMBIkAEiAARUESAHLoiTJSJCBABIkAEiMD4JkAOfXy3j7bWkXQiQASIABGYNATIoU+apqSKEAEiQASIwFQmQA59Kre+tnUn6USACBABIjCKBMihjyJsUkUEiAARIAJEQCsC5NC1IktytSVA0okAESACRCCFADn0FBwUIQJEgAgQASIwMQmQQ5+Y7UZWa0uApBMBIkAEiAAR0JYASSfCRIAIEAEiQASMCQFy6GOCnZQSASJABIgA2hKYetLJoU+9NqcaEwEiQASIwCQkQA59EjYqVYkIEAEiQAS0JTAepZNDH4+tQjYRASJABIgAEVBJgBy6SmCUnQgQASJABIiAtgTyk04OPT9uVIoIEAEiQASIwLgiQA59XDUHGUMEiAARIAJEID8CSh16ftKpFBEgAkSACBABIjAqBMihjwpmUkIEiAARIAJEQFsC48Oha1tHkk4EiAARIAJEYNITIIc+6ZuYKkgEiAARIAJTgcBUcOhToR2pjkSACBABIjDFCZBDn+I7AFWfCBABIkAEJgcBcuiFtiOVJwJEgAgQASIwDgiQQx93TUIGEQEiQASIABEolAA59EIJaluepBMBIkAEiAARUESAHLoiTJSJCBABIkAEiMD4JkAOfXy3j7bWkXQiQASIABGYNATIoU+apqSKEAEiQASIwFQmQA59Kre+tnUn6USACBABIjCKBMihjyJsUkUEiAARIAJEQCsC5NC1IktytSVA0okAESACRCCFADn0FBwUIQJEgAgQASIwMQmQQ5+Y7UZWa0uApBMBIkAEiAAR0JYASSfCRIAIEAEiQASMCQFy6GOCnZQSASJABIgA2hKYetLJoU+9NqcaEwEiQASIwCQkQA59EjYqVYkIEAEiQAS0JTAepZNDH4+tQjYRASJABIgAEVBJgBy6SmCUnQgQASJABIiAtgTyk04OPT9uVIoIEAEiQASIwLgiQA59XDUHGUMEiAARIAJEID8CSh16ftKpFBEgAkSACBABIjAqBMihjwpmUkIEiAARIAJEQFsC48Oha1tHkk4EiAARIAJEYNITIIc+6ZuYKkgEiAARIAJTgcBUcOhToR2pjkSACBABIjDFCZBDn+I7AFWfCBABIkAEJgcBcuiFtiOVJwJEgAgQASIwDgiQQx93TUIGEQEiQASIABEolAA59EIJaluepBMBIkAEiAARUESAHLoiTJSJCBABIkAEiMD4JkAOfXy3j7bWkXQiQASIABGYNATIoU+apqSKEAEiQASIwFQmQA59Kre+tnUn6USACBABIjCKBMihjyJsUkUEiAARIAJEQCsC5NC1IktytSVA0okAESACRCCFADn0FBwUIQJEgAgQASIwMQmQQ5+Y7UZWa0uApBMBIkAEiAAR0JYASSfCRIAIEAEiQASMCQFy6GOCnZQSASJABIgA2hKYetLJoU+9NqcaEwEiQASIwCQkQA59EjYqVYkIEAEiQAS0JTAepZNDH4+tQjYRASJABIgAEVBJgBy6SmCUnQgQASJABIiAtgTyk04OPT9uVIoIEAEiQASIwLgiQA59XDUHGUMEiAARIAJEID8CSh16ftKpFBEgAkSACBABIjAqBMihjwpmUkIEiAARIAJEQFsC48Oha1tHkk4EiAARIAJEYNITIIc+6ZuYKkgEiAARIAJTgcBUcOhToR2pjkSACBABIjDFCZBDn+I7AFWfCBABIkAEJgcBcuiFtiOVJwJEgAgQASIwDgiQQx93TUIGEQEiQASIABEolAA59EIJaluepBMBIkAEiAARUESAHLoiTJSJCBABIkAEiMD4JkAOfXy3j7bWkXQiQASIABGYNATIoU+apqSKEAEiQASIwFQmQA59Kre+tnUn6USACBABIjCKBMihjyJsUkUEiAARIAJEQCsC5NC1IktytSVA0okAESACRCCFADn0FBwUIQJEgAgQASIwMQmQQ5+Y7UZWa0uApBMBIkAEiAAR0JYASSfCRIAIEAEiQASMCQFy6GOCnZQSASJABIgA2hKYetLJoU+9NqcaEwEiQASIwCQkQA59EjYqVYkIEAEiQAS0JTAepZNDH4+tQjYRASJABIgAEVBJgBy6SmCUnQgQASJABIiAtgTyk04OPT9uVIoIEAEiQASIwLgiQA59XDUHGUMEiAARIAJEID8CSh16ftKpFBEgAkSACBABIjAqBMihjwpmUkIEiAARIAJEQFsC48Oha1tHkk4EiAARIAJEYNITIIc+6ZuYKkgEiAARIAJTgcBUcOhToR2pjkSACBABIjDFCZBDn+I7AFWfCBABIkAEJgcBcuiFtiOVJwJEgAgQASIwDgiQQx93TUIGEQEiQASIABEolAA59EIJaluepBMBIkAEiAARUESAHLoiTJSJCBABIkAEiMD4JkAOfXy3j7bWkXQiQASIABGYNATIoU+apqSKEAEiQASIwFQmQA59Kre+tnUn6USACBABIjCKBMihjyJsUkUEiAARIAJEQCsC5NC1IktytSVA0okAESACRCCFADn0FBwUIQJEgAgQASIwMQmQQ5+Y7UZWa0uApBMBIkAEiAAR0JYASSfCRIAIEAEiQASMCQFy6GOCnZQSASJABIgA2hKYetLJoU+9NqcaEwEiQASIwCQkQA59EjYqVYkIEAEiQAS0JTAepZNDH4+tQjYRASJABIgAEVBJgBy6SmCUnQgQASJABIiAtgTyk04OPT9uVIoIEAEiQASIwLgiQA59XDUHGUMEiAARIAJEID8CSh16ftKpFBEgAkSACBABIjAqBMihjwpmUkIEiAARIAJEQFsC48Oha1tHkk4EiAARIAJEYNITIIc+6ZuYKkgEiAARIAJTgcBUcOhToR2pjkSACBABIjDFCZBDn+I7AFWfCBABIkAEJgcBcuiFtiOVJwJEgAgQASIwDgiQQx93TUIGEQEiQASIABEolAA59EIJaluepBMBIkAEiAARUESAHLoiTJSJCBABIkAEiMD4JkAOfXy3j7bWkXQiQASIABGYNATIoU+apqSKEAEiQASIwFQmQA59Kre+tnUn6USACBABIjCKBMihjyJsUkUEiAARIAJEQCsC5NC1IktytSVA0okAESACRCCFADn0FBwUIQJEgAgQASIwMQmQQ5+Y7UZWa0uApBMBIkAEiAAR0JYASSfCRIAIEAEiQASMCQFy6GOCnZQSASJABIgA2hKYetLJoU+9NqcaEwEiQASIwCQkQA59EjYqVYkIEAEiQAS0JTAepZNDH4+tQjYRASJABIgAEVBJgBy6SmCUnQgQASJABIiAtgTyk04OPT9uVIoIEAEiQASIwLgiQA59XDUHGUMEiAARIAJEID8CSh16ftKpFBEgAkSACBABIjAqBMihjwpmUkIEiAARIAJEQFsC48Oha1tHkk4EiAARIAJEYNITIIc+6ZuYKkgEiAARIAJTgcBUcOhToR2pjkSACBABIjDFCZBDn+I7AFWfCBABIkAEJgcBcuiFtiOVJwJEgAgQASIwDgiQQx93TUIGEQEiQASIABEolAA59EIJaluepBMBIkAEiAARUESAHLoiTJSJCBABIkAEiMD4JkAOfXy3j7bWkXQiQASIABGYNATIoU+apqSKEAEiQASIwFQmQA59Kre+tnUn6USACBABIjCKBMihjyJsUkUEiAARIAJEQCsC5NC1IktytSVA0okAESACRCCFADn0FBwUIQJEgAgQASIwMQmQQ5+Y7UZWa0uApBMBIkAEiAAR0JYASSfCRIAIEAEiQASMCQFy6GOCnZQSASJABIgA2hKYetLJoU+9NqcaEwEiQASIwCQkQA59EjYqVYkIEAEiQAS0JTAepZNDH4+tQjYRASJABIgAEVBJgBy6SmCUnQgQASJABIiAtgTyk04OPT9uVIoIEAEiQASIwLgiQA59XDUHGUMEiAARIAJEID8CSh16ftKpFBEgAkSACBABIjAqBMihjwpmUkIEiAARIAJEQFsC48Oha1tHkk4EiAARIAJEYNITIIc+6ZuYKkgEiAARIAJTgcBUcOhToR2pjkSACBABIjDFCZBDn+I7AFWfCBABIkAEJgcBcuiFtiOVJwJEgAgQASIwDgiQQx93TUIGEQEiQASIABEolAA59EIJaluepBMBIkAEiAARUESAHLoiTJSJCBABIkAEiMD4JkAOfXy3j7bWkXQiQASIABGYNATIoU+apqSKEAEiQASIwFQmQA59Kre+tnUn6USACBABIjCKBMihjyJsUkUEiAARIAJEQCsC5NC1IktytSVA0okAESACRCCFADn0FBwUIQJEgAgQASIwMQmQQ5+Y7UZWa0uApBMBIkAEiAAR0JYASSfCRIAIEAEiQASMCQFy6GOCnZQSASJABIgA2hKYetLJoU+9NqcaEwEiQASIwCQkQA59EjYqVYkIEAEiQAS0JTAepZNDH4+tQjYRASJABIgAEVBJgBy6SmCUnQgQASJABIiAtgTyk04OPT9uVIoIEAEiQASIwLgiQA59XDUHGUMEiAARIAJEID8CSh16ftKpFBEgAkSACBABIjAqBMihjwpmUkIEiAARIAJEQFsC48Oha1tHkk4EiAARIAJEYNITIIc+6ZuYKkgEiAARIAJTgcBUcOhToR2pjkSACBABIjDFCZBDn+I7AFWfCBABIkAEJgcBcuiFtiOVJwJEgAgQASIwDgiQQx93TUIGEQEiQASIABEolAA59EIJaluepBMBIkAEiAARUESAHLoiTJSJCBABIkAEiMD4JkAOfXy3j7bWkXQiQASIABGYNATIoU+apqSKEAEiQASIwFQmQA59Kre+tnUn6USACBABIjCKBMihjyJsUkUEiAARIAJEQCsC5NC1IktytSVA0okAESACRCCFADn0FBwUIQJEgAgQASIwMQmQQ5+Y7UZWa0uApBMBIkAEiAAR0JYASSfCRIAIEAEiQASMCQFy6GOCnZQSASJABIgA2hKYetLJoU+9NqcaEwEiQASIwCQkQA59EjYqVYkIEAEiQAS0JTAepZNDH4+tQjYRASJABIgAEVBJgBy6SmCUnQgQASJABIiAtgTyk04OPT9uVIoIEAEiQASIwLgiQA59XDUHGUMEiAARIAJEID8CSh16ftKpFBEgAkSACBABIjAqBMihjwpmUkIEiAARIAJEQFsC48Oha1tHkk4EiAARIAJEYNITIIc+6ZuYKkgEiAARIAJTgcBUcOhToR2pjkSACBABIjDFCZBDn+I7AFWfCBABIkAEJgcBcuiFtiOVJwJEgAgQASIwDgiQQx93TUIGEQEiQASIABEolAA59EIJaluepBMBIkAEiAARUESAHLoiTJSJCBABIkAEiMD4JkAOfXy3j7bWkXQiQASIABGYNATIoU+apqSKEAEiQASIwFQmQA59Kre+tnUn6USACBABIjCKBMihjyJsUkUEiAARIAJEQCsC5NC1IktytSVA0okAESACRCCFADn0FBwUIQJEgAgQASIwMQmQQ5+Y7UZWa0uApBMBIkAEiAAR0JYASSfCRIAIEAEiQASMCQFy6GOCnZQSASJABIgA2hKYetLJoU+9NqcaEwEiQASIwCQkQA59EjYqVYkIEAEiQAS0JTAepZNDH4+tQjYRASJABIgAEVBJgBy6SmCUnQgQASJABIiAtgTyk04OPT9uVIoIEAEiQASIwLgiQA59XDUHGUMEiAARIAJEID8CSh16ftKpFBEgAkSACBABIjAqBMihjwpmUkIEiAARIAJEQFsC48Oha1tHkk4EiAARIAJEYNITIIc+6ZuYKkgEiAARIAJTgcBUcOhToR2pjkSACBABIjDFCZBDn+I7AFWfCBABIkAEJgcBcuiFtiOVJwJEgAgQASIwDgiQQx93TUIGEQEiQASIABEolAA59EIJaluepBMBIkAEiAARUESAHLoiTJSJCBABIkAEiMD4JkAOfXy3j7bWkXQiQASIABGYNATIoU+apqSKEAEiQASIwFQmQA59Kre+tnUn6USACBABIjCKBMihjyJsUkUEiAARIAJEQCsC5NC1IktytSVA0okAESACRCCFADn0FBwUIQJEgAgQASIwMQmQQ5+Y7UZWa0uApBMBIkAEiAAR0JYASSfCRIAIEAEiQASMCQFy6GOCnZQSASJABIgA2hKYetLJoU

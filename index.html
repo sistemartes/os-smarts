@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Smart OS Cloud - V5.2 Final</title>
+    <title>Smart OS Cloud - V5.3 Pie Chart Edition</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
@@ -52,7 +52,7 @@
                 <div class="bg-white p-6 rounded-xl shadow-sm border border-slate-200 h-64 flex flex-col items-center">
                     <h3 class="text-[10px] font-black text-slate-400 mb-2 uppercase tracking-widest">Distribuição (%)</h3>
                     <div class="relative w-full h-32">
-                        <canvas id="graficoRosca"></canvas>
+                        <canvas id="graficoPizza"></canvas>
                     </div>
                     <div id="legenda-percentual" class="mt-8 text-[10px] font-black text-slate-500 flex gap-4 uppercase tracking-tighter"></div>
                 </div>
@@ -135,7 +135,7 @@
     const SUPABASE_KEY = 'sb_publishable_M5bgMFw0R1rWLe5nfofFeg_NwLkjbBh'; 
     const supaClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
-    let chartBarras = null, chartRosca = null, listaClientesGlobal = [], minhasOrdens = [];
+    let chartBarras = null, chartPizza = null, listaClientesGlobal = [], minhasOrdens = [];
 
     // LOGIN
     async function fazerLogin() {
@@ -218,11 +218,12 @@
             options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } } }
         });
 
-        if (chartRosca) chartRosca.destroy();
-        chartRosca = new Chart(document.getElementById('graficoRosca'), {
-            type: 'doughnut', data: { labels: labels, datasets: [{ data: valores, backgroundColor: cores }] },
+        if (chartPizza) chartPizza.destroy();
+        chartPizza = new Chart(document.getElementById('graficoPizza'), {
+            type: 'pie', // MUDADO PARA PIZZA
+            data: { labels: labels, datasets: [{ data: valores, backgroundColor: cores }] },
             options: { 
-                responsive: true, maintainAspectRatio: false, cutout: '80%', 
+                responsive: true, maintainAspectRatio: false, 
                 plugins: { 
                     legend: { display: false },
                     tooltip: { callbacks: { label: (ctx) => ` ${ctx.label}: ${ctx.raw} (${((ctx.raw/total)*100).toFixed(1)}%)` } }
@@ -231,7 +232,7 @@
         });
     }
 
-    // AÇÕES
+    // AÇÕES RESTANTES...
     async function salvarNoSupabase() {
         const idEdicao = document.getElementById('edit-id').value;
         const nomeCliente = document.getElementById('cliente').value;
